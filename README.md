@@ -7,16 +7,28 @@ LACToS is a method for OOD detection in inverse problems.
 Pixel-level anomaly / OOD localization. For each test image we draw several diffusion
 reconstructions, embed image and reconstructions with ResNet-101 pixel features (1792-d),
 compress them with a small per-target **PixelAutoEncoder (1792 → 3)**, and score every
-superpixel (`ood/superpixels.py`) by how far its joint RGB + latent histogram falls outside the
+superpixel (`ood/superpixels.py`) by how far its RGB and latent histograms fall outside the
 *typical set* of the reconstructions (average NLL minus entropy). The superpixel scores
 form a delta map, which is smoothed and compared against the ground-truth masks.
 
 ```
 test image ──► diffusion reconstructions (DDAD-native / DPS, shipped)
            ──► ResNet-101 pixel features ──► PixelAutoEncoder (1792→3)
-           ──► superpixels ──► typical-set score  Δ = (NLL_rgb − H_rgb) + λ (NLL_lat − H_lat)
+           ──► superpixels ──► typical-set score  Δ = (NLL_rgb − H_rgb) + (NLL_lat − H_lat)
            ──► Gaussian smoothing (σ=5) ──► pixel AUROC / AP / F1max / AUPRO / SNR
 ```
+
+**How the RGB and latent terms are combined.** For each superpixel, the RGB values and the
+autoencoder latents of the reconstructions each get their own histogram, and the score is the sum
+of the two typical-set deviations:
+
+    Δ = (NLL_rgb − H_rgb) + (NLL_lat − H_lat)
+
+This sum is exactly the joint typical-set score under a factorized model p(rgb, z) = p(rgb) · p(z)
+(joint entropy = H_rgb + H_lat, joint NLL = NLL_rgb + NLL_lat). We use the addition for
+computational reasons: a full joint histogram over (R, G, B, z₁, z₂, z₃) would have 32⁶ ≈ 10⁹ bins
+per superpixel, while each superpixel only provides ~25 pixels × M reconstructions (~10³ samples),
+so it could neither be stored nor estimated reliably.
 
 Evaluated on all 15 MVTec-AD categories, a CT anomaly set (100 slices), chest/baggage
 X-ray (DvXray scissors, 72 patients) and masked faces (50 images).

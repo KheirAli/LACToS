@@ -56,7 +56,12 @@ does not affect the typical-set score.
 
 Both are optionally smoothed in bin space (`smooth_sigma`). The superpixel score is
 
-`delta = (NLL_rgb(x) − H_rgb) + lam · (NLL_feat(x) − H_feat)`
+`delta = (NLL_rgb(x) − H_rgb) + (NLL_feat(x) − H_feat)`
+
+The RGB and latent histograms are built separately and their deviations are added. This equals the
+joint typical-set score under a factorized model p(rgb, z) = p(rgb)·p(z); the addition is used for
+computational reasons, since a joint 6-D histogram (32⁶ ≈ 10⁹ bins per superpixel) cannot be stored
+or estimated from the ~10³ samples a superpixel provides.
 
 where NLL is the mean negative log₂-likelihood of the input pixels under the histogram and H is the
 histogram's entropy, both in bits.
@@ -99,7 +104,6 @@ YAML value applies otherwise.
 | `--rgb_only` | flag (1768) | `cfg.scoring.rgb_only` (1793) | ablation only: RGB term alone |
 | `--save_heatmaps DIR` | None (1771) | `cfg.eval.heatmap_dir` (1794) | writes σ=5 overlays |
 | `--sigma_rohan` | float, None (1773) | `cfg.scoring.sigma_rohan` (1806) | read **only** by `local_gaussian` (1347-1351). **Ignored by `typical_set`** |
-| `--lam` | float, None (1774) | `cfg.scoring.lam` (1807) | default `score_cfg.get("lam", 1.0)` (1369). No YAML sets it, so paper value = 1.0 |
 | `--autoencoder_path` | str, None (1776) | `cfg.scoring.autoencoder_path` (1808) | if set, AE path; otherwise per-image PCA path (1330-1338) |
 | `--max_reconstructions` | int, None (1777) | `cfg.sampling.max_reconstructions` (1815) | random subset without replacement, `np.random.choice` (1202), **only if** more draws are available than the cap |
 | `--max_samples` | int, None (1779) | `cfg.eval.max_samples` (1817) | first N samples per subcategory (1499) |
@@ -218,7 +222,6 @@ unit test `tests/test_superpixels.py:40` (`..._no_split_with_large_min_pixels`) 
 | PMF storage | — | dense PMF cast to **float16** (:144) | — | probabilities below fp16 range become 0, so per-pixel NLL is capped at `-log2(1e-12) ≈ 39.9` bits. Sparse path: unseen bin gives `p = eps/(N_sp+eps)` (:218-221) |
 | entropy | — | `H = −Σ q log2(q+eps)` per superpixel, bits (:152-154) | — | over the smoothed PMF built from all M·|SP| reconstruction pixels |
 | NLL | — | mean over the superpixel's input pixels of `−log2 p(bin(x))` (:157-172) | — | target = input/label image (YAML `use_label_as_target` is **not read**; GPU path always uses the label) |
-| `lam` | `scoring.lam` (`--lam`) | 1.0 (:388; `evaluate.py:1369`) | **1.0** | `delta = (NLL_rgb−H_rgb) + lam·(NLL_feat−H_feat)` (:510). **Signed**: the CPU reference `compute_delta_map` (:260) uses `abs(·)`, the GPU path does not |
 | `min_pixels` (scoring) | `scoring.min_pixels` | 2 (:383); YAML 2 | 2 | superpixels smaller than this get NaN (:416) |
 | histogram counts | — | int16 (:134-136) | — | overflows if one bin of one superpixel exceeds 32767 counts. Not reachable at 25 px x 48 draws |
 | `rgb_only` | `--rgb_only` | False | False | ablation |
@@ -240,7 +243,7 @@ unit test `tests/test_superpixels.py:40` (`..._no_split_with_large_min_pixels`) 
 
 Common to every target (`scripts/run_reproduce.sh` `COMMON`, line 41, or explicit flags):
 `--n_pca 3`, `--superpixel_target_size 30`, `--smooth_sigma 1`, `--no_plots`, `--skip_sampling`.
-Also: scorer `typical_set`, `lam` 1.0, `scoring.min_pixels` 2, eps 1e-12, layers 1-3, patch 3, eval
+Also: scorer `typical_set`, `scoring.min_pixels` 2, eps 1e-12, layers 1-3, patch 3, eval
 sigma **5** (`full_metric_table.py` default, used by `scripts/score_metrics.sh`), `ABL_SEED=0`. Every run goes
 through `seeded_run.py`.
 
