@@ -15,7 +15,7 @@ data:
 
 model:
   DDADS: False
-  checkpoint_dir: ./weights/ddad_unet
+  checkpoint_dir: ./weights/diffusion/mvtec
   checkpoint_name: weights
   exp_name: default
   feature_extractor: wide_resnet101_2

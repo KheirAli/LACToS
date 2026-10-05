@@ -86,7 +86,7 @@ def test_prepare_sample_dirs_creates_expected_layout(tmp_path):
 def loaded_cable_unet():
     """One-time load of the cable UNet for sampler round-trip tests."""
     from ood.samplers.io import load_ddad_unet
-    ckpt = os.environ.get("DDAD_CKPT_CABLE", "./weights/ddad_unet/cable/3000")
+    ckpt = os.environ.get("DDAD_CKPT_CABLE", "./weights/diffusion/mvtec/cable/3000")
     import os
     if not os.path.exists(ckpt):
         pytest.skip("cable checkpoint not available")

@@ -16,7 +16,7 @@ data:
 
 model:
   DDADS: False
-  checkpoint_dir: ./weights/ddad_unet  # absolute; os.path.join will use as-is
+  checkpoint_dir: ./weights/diffusion/mvtec  # absolute; os.path.join will use as-is
   checkpoint_name: weights         # unused on detection path
   exp_name: default
   feature_extractor: wide_resnet101_2

@@ -26,7 +26,7 @@ def pytest_configure(config):
     )
 
 
-DDAD_CKPT_CABLE = os.environ.get("DDAD_CKPT_CABLE", "./weights/ddad_unet/cable/3000")
+DDAD_CKPT_CABLE = os.environ.get("DDAD_CKPT_CABLE", "./weights/diffusion/mvtec/cable/3000")
 
 
 def _ckpt_available() -> bool:

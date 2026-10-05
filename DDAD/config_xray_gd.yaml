@@ -11,7 +11,7 @@ data:
   test_subfolder: good
 model:
   DDADS: false
-  checkpoint_dir: ./weights/ddad_unet
+  checkpoint_dir: ./weights/diffusion/mvtec
   checkpoint_name: ./weights/diffusion/mvtec/xray/500
   exp_name: default
   feature_extractor: resnet101

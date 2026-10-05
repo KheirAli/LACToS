@@ -17,7 +17,7 @@ data:
 
 model:
   DDADS: False
-  checkpoint_dir: ./weights/ddad_unet   # EDIT: where to save epoch ckpts
+  checkpoint_dir: ./weights/diffusion/mvtec   # EDIT: where to save epoch ckpts
   checkpoint_name: weights
   exp_name: xray_pilot
   feature_extractor: wide_resnet101_2   # reused for heat_map scoring (ImageNet pretrained)
