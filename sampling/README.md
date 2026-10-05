@@ -20,22 +20,24 @@ Samplers behind the released reconstructions:
 
 | Dataset | Sampler | Code | Diffusion checkpoint (not released) |
 |---|---|---|---|
-| MVTec AD (15 categories) | DDAD-native conditioned denoising (w=2, t*=250, skip 25, 40 draws) | `tools/generate_recons.py` + `configs/recon/ddad_native_*.yaml` + `DDAD/` | DDAD UNet per category (`weights/ddad_unet/<cat>/<epoch>`) |
+| MVTec AD (15 categories) | DDAD-guided conditioned denoising (w=2, t*=250, skip 25, 40 draws) | `tools/generate_recons.py` + `configs/recon/ddad_native_*.yaml` + `DDAD/` | DDAD UNet per category, `weights/diffusion/mvtec/<cat>/<epoch>` (**not yet released**) |
 | CT (100 slices) | DPS denoising: y = x + σn, σ = 0.05, ζ′ = 0.2, 10 draws | `sampling/dps/sample_fast.py` + `sampling/wire_dps_ct.py` | `weights/diffusion/ct_dps_model050000.pt` |
 | X-ray (DvXray scissors) | DPS patch inpainting | `sampling/dps/` + `sampling/wire_dps_xray.py` | `weights/diffusion/xray_dps_model500000.pt` |
 | Faces (random22, moreface28) | DPS patch inpainting, FFHQ prior, σ = 0.5 | `sampling/dps/` (DPS codebase) | `weights/diffusion/ffhq_10m.pt` (public DPS model) |
 
 ## A. DDAD-guided denoising (MVTec)
 
-1. Train or download a DDAD UNet per category. Training uses `DDAD/main.py --train True` with
-   `DDAD/config_<cat>.yaml`; the original DDAD checkpoints are linked from `DDAD/README.md`. Put them
-   at `weights/ddad_unet/<category>/<epoch>`.
+1. Get the DDAD UNet for the category (`weights/diffusion/mvtec/<category>/<epoch>`). **These per-category
+   MVTec models are not in the current release yet** (see docs/DATA.md for the epoch of each). To train
+   your own, use `DDAD/main.py --train True` with `DDAD/config_<cat>.yaml`. The public DDAD checkpoints
+   (`DDAD/README.md`) work for new experiments, but are not verified to be the models behind the released
+   reconstructions.
 2. Generate reconstructions:
 
 ```bash
 python tools/generate_recons.py --recon_config configs/recon/ddad_native_cable.yaml
 # or flat CLI, e.g. 40 draws per image as in the paper:
-python tools/generate_recons.py --sampler ddad_native --ckpt weights/ddad_unet/cable/3000 \
+python tools/generate_recons.py --sampler ddad_native --ckpt weights/diffusion/mvtec/cable/3000 \
     --image_dir data/mvtec_ad/cable/test/bent_wire --samples 000 001 002 003 004 005 006 007 008 009 \
     --num_seeds 40 \
     --out_root recons/results_patches_ddad_native_cable_bent_wire_1 \

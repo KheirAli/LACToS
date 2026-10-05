@@ -12,7 +12,7 @@ data:
 model:
   DDADS: false
   checkpoint_dir: ./weights/ddad_unet
-  checkpoint_name: ./weights/ddad_unet/xray/500
+  checkpoint_name: ./weights/diffusion/mvtec/xray/500
   exp_name: default
   feature_extractor: resnet101
   learning_rate: 0.0003

@@ -16,10 +16,10 @@ data :
 
 model:
   DDADS: False
-  checkpoint_dir: ./weights/ddad_unet/combined   #CT
-  # checkpoint_dir: ./weights/ddad_unet/faces #faces
-  checkpoint_name: ./weights/ddad_unet/combined #CT
-  # checkpoint_name: ./weights/ddad_unet/faces #faces
+  checkpoint_dir: ./weights/diffusion/mvtec/combined   #CT
+  # checkpoint_dir: ./weights/diffusion/mvtec/faces #faces
+  checkpoint_name: ./weights/diffusion/mvtec/combined #CT
+  # checkpoint_name: ./weights/diffusion/mvtec/faces #faces
   exp_name: default
   feature_extractor: resnet101 #wide_resnet101_2 #wide_resnet101_2  # wide_resnet50_2 #resnet50
   learning_rate: 3e-4 

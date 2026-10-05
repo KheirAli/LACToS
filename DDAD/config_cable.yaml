@@ -23,7 +23,7 @@ model:
   learning_rate: 3e-4
   weight_decay: 0.05
   epochs: 250
-  load_chp: 3000                   # ./weights/ddad_unet/cable/3000
+  load_chp: 3000                   # ./weights/diffusion/mvtec/cable/3000
   DA_epochs: 4
   DA_chp: 0                        # feat0 = ImageNet V1 (verified)
   v: 1

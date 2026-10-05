@@ -43,6 +43,9 @@ released reconstruction sets were produced with:
 | X-ray (DvXray), faces | DPS patch inpainting (Chung et al., 2023) | 16–48 |
 
 Sampler details and how to regenerate or add reconstructions: [sampling/README.md](sampling/README.md).
+Diffusion models: the CT, X-ray and FFHQ priors are released (`weights/diffusion/`); the per-category
+MVTec DDAD UNets are **not yet released** (epochs listed in [docs/DATA.md](docs/DATA.md)). None of them
+are needed to reproduce the numbers, because the reconstructions themselves are released.
 
 Evaluated on all 15 MVTec-AD categories, a CT anomaly set (100 slices), chest/baggage
 X-ray (DvXray scissors, 72 patients) and masked faces (50 images).

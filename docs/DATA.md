@@ -57,8 +57,22 @@ Diffusion models (only needed to *regenerate* reconstructions, not to reproduce 
 | `xray_dps_model500000.pt` | X-ray DPS | `sampling/dps/configs/xray_model_config.yaml` |
 | `ffhq_10m.pt` | faces DPS (public DPS FFHQ model, Chung et al.) | DPS upstream FFHQ config |
 
-The MVTec DDAD UNets (~130 MB per category) are not on the release server and are not included;
-the original DDAD checkpoints are linked from `DDAD/README.md`.
+**MVTec diffusion models (not yet in the release).** The MVTec reconstructions were generated with one
+DDAD UNet per category (~130 MB each). These checkpoints are not part of the current release; they will be
+added to `weights/diffusion/mvtec/<category>/<epoch>` once uploaded. They are **not needed to reproduce the
+numbers**: the reconstructions they produced are released (`recons/`). The checkpoint epoch of each model,
+as recorded in each set's `recon_metadata.json`:
+
+| Category | Epoch | | Category | Epoch | | Category | Epoch |
+|---|---:|---|---|---:|---|---|---:|
+| bottle | 1000 | | grid | 2000 | | screw | 2000 |
+| cable | 3000 | | hazelnut | 2000 | | tile | 1000 |
+| capsule | 1500 | | leather | 2000 | | toothbrush | 2000 |
+| carpet | 2500 | | metal_nut | 3000 | | transistor | 2000 |
+| pill | not recorded | | wood | 2000 | | zipper | 1000 |
+
+The public DDAD checkpoints linked from `DDAD/README.md` have not been verified to be these models; use them
+only for new experiments, not as a substitute when regenerating the released MVTec reconstructions.
 
 ## Provenance and licences
 
