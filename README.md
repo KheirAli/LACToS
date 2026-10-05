@@ -47,8 +47,8 @@ Diffusion models: the CT, X-ray and FFHQ priors are released (`weights/diffusion
 MVTec DDAD UNets are **not yet released** (epochs listed in [docs/DATA.md](docs/DATA.md)). None of them
 are needed to reproduce the numbers, because the reconstructions themselves are released.
 
-Evaluated on all 15 MVTec-AD categories, a CT anomaly set (100 slices), chest/baggage
-X-ray (DvXray scissors, 72 patients) and masked faces (50 images).
+Evaluated on all 15 MVTec-AD categories, a CT anomaly set (100 slices), baggage
+X-ray (DvXray, scissors class, 72 patients) and masked faces (50 images).
 
 ## Results (pixel ROC-AUC, eval σ = 5)
 
@@ -56,7 +56,7 @@ X-ray (DvXray scissors, 72 patients) and masked faces (50 images).
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | .9771 | .9569 | .9553 | .9259 | .9126 | .9688 | .9842 | .9580 | .9193 | .9231 | .9007 | .9477 | .9432 | .8912 | .9666 | **.9420** |
 
-CT .9463 · X-ray (b1, 32 patients) .9528 · faces (random22) .9105.
+CT .9463 · X-ray (b1, 32 patients) .9528 (reproduces as .9526) · faces (random22) .9105.
 Full metric table (AUROC, SNR, AP, MSE, F1max, AUPRO) and the verification log:
 [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md).
 
@@ -77,7 +77,7 @@ Verified numbers and determinism notes: **[docs/REPRODUCIBILITY.md](docs/REPRODU
 ## 1. Install
 
 ```bash
-git clone https://github.com/TODO/LACToS.git && cd LACToS
+git clone https://github.com/KheirAli/LACToS.git && cd LACToS
 conda env create -f environment.yml          # exact reference env: python 3.10.20, torch 2.11.0 (cu130)
 conda activate lactos
 # or: pip install -r requirements.txt  (install the torch build matching your CUDA first)
@@ -86,7 +86,7 @@ conda activate lactos
 ## 2. Download assets (weights, test data, reconstructions)
 
 ```bash
-bash scripts/download_assets.sh                      # everything, ~9.5 GB
+bash scripts/download_assets.sh                      # everything, ~9 GB
 bash scripts/download_assets.sh weights data toothbrush CT   # or just what you need
 bash scripts/check_env.sh                            # checksums, files, env, unit tests
 ```
@@ -131,7 +131,7 @@ sampling/                   reconstruction generation: DPS sampler (sampling/dps
 tools/                      seeded_run.py, generate_recons.py (DDAD-guided sampler driver), prepare_xray_dataset.py, metrics/
 configs/                    evaluation YAMLs; configs/recon/ = sampler YAMLs for tools/generate_recons.py
 scripts/                    run_reproduce.sh, score_metrics.sh, summarize_results.py, check_env.sh, download/make assets
-DDAD/                       DDAD implementation (Mousakhan et al.): UNet training + DDAD-native sampling backend
+DDAD/                       DDAD implementation (Mousakhan et al.): UNet training + DDAD-guided sampling backend (MVTec)
 tests/                      pytest suite (`pytest -m "not requires_ckpt"` needs no checkpoints)
 docs/                       HYPERPARAMETERS.md, DATA.md, REPRODUCIBILITY.md
 reference_results/          JSON outputs of the verified run (compare with your own)
@@ -144,7 +144,7 @@ See [CITATION.cff](CITATION.cff). <!-- TODO(maintainers): BibTeX -->
 ## Acknowledgements and licences
 
 * **DDAD** — Mousakhan et al., *Anomaly Detection with Conditioned Denoising Diffusion Models*, 2023 (`DDAD/`, reconstruction sampler).
-* **DPS** — Chung et al., *Diffusion Posterior Sampling*, ICLR 2023 (face reconstructions).
+* **DPS** — Chung et al., *Diffusion Posterior Sampling*, ICLR 2023 (CT, X-ray and face reconstructions).
 * **MVTec AD** — Bergmann et al.; data under CC BY-NC-SA 4.0.
 
-Code licence: see [LICENSE](LICENSE). <!-- TODO(maintainers): choose licence; check DDAD upstream licence for DDAD/ -->
+Code licence: **not yet chosen** — a LICENSE file will be added before the public release. <!-- TODO(maintainers): choose licence; check DDAD upstream licence for DDAD/ -->

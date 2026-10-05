@@ -146,7 +146,7 @@ says not to pass `--autoencoder_path` and to use PCA, but every paper run passes
 | recon dir | `--results_root` + `--category` + `--results_suffix` | — (`evaluate.py:1117-1122`) | Section 3 | `{root}_{cat}_{sub}{suffix}/samples_*/` |
 | `test_origin` | `data.test_origin` | none, required | `ddad_native`; moreface: `Combined_0.5_sigma_batched` | recon subdir prefix `{test_origin}_{patch}_{bottom_suffix}` (`ood/data.py:166-210`) |
 | `bottom_suffix` | `data.bottom_suffix` | none, required | `"4"` everywhere | recon subdir suffix |
-| `num_patches` | `sampling.num_patches` | 24 (`evaluate.py:1191`) | 1 (DDAD-native YAMLs); 24 (moreface YAML) | patch indices `0..num_patches-1` are scanned and missing ones skipped with a warning. Moreface: only patches 8, 12-14, 16-23 (12 patches) exist at σ=0.5, so 12x4 = 48 draws. The `Combined_1.0_*` dirs are ignored |
+| `num_patches` | `sampling.num_patches` | 24 (`evaluate.py:1191`) | 1 (DDAD-guided YAMLs); 24 (moreface YAML) | patch indices `0..num_patches-1` are scanned and missing ones skipped with a warning. Moreface: only patches 8, 12-14, 16-23 (12 patches) exist at σ=0.5, so 12x4 = 48 draws. The `Combined_1.0_*` dirs are ignored |
 | label image | — | first of patch 0..49, `0_00000.png` or `00000.png` (`ood/data.py:227`) | — | input image `x` |
 | `max_reconstructions` (M cap) | `--max_reconstructions` / `sampling.max_reconstructions` | None (all draws) | MVTec 50, pill 50, CT 40, xray 40, faces none | cap only. **No paper run subsamples**: MVTec dirs hold 40 draws, pill_3 32, CT 10, xray b1 24 (25 samples) or 16 (7 samples), b2 32, faces 48, moreface 48 (counted on disk). So `ABL_SEED` and `np.random.choice` never run |
 | `sampling.enabled` | YAML | forced `False` (1791) | False | — |
@@ -365,7 +365,7 @@ example CT 0.8716 vs 0.9378, both measured on the earlier DDAD CT reconstruction
 ## 5. Reconstruction (sampler) hyperparameters
 
 Sources: `recon_metadata.json` where present (written by `tools/generate_recons.py:173-188`, overwritten
-on each invocation), otherwise indirect evidence (flagged). DDAD-native sampler defaults
+on each invocation), otherwise indirect evidence (flagged). DDAD-guided sampler (code name `ddad_native`) defaults
 (`ood/samplers/ddad_native.py:29-33, 49-50`): `beta_start=1e-4`, `beta_end=0.02`, `trajectory_steps=1000`,
 `test_trajectoy_steps(t*)=250`, `skip=25`, `eta=1.0`, `w=2.0`. Additive-DPS defaults
 (`ood/samplers/additive_dps.py:33-54`): σ=0.1, scale 0.5, skip 25, eta 1 (not used for any paper set; its
@@ -374,7 +374,7 @@ on each invocation), otherwise indirect evidence (flagged). DDAD-native sampler 
 (`ddad_native.py:55-60`, `generate_recons.py:161-166`). Inputs are resized to 256² bicubic and scaled to
 [-1,1] (`ood/samplers/io.py:54-58`).
 
-DDAD-native algorithm (`DDAD/reconstruction.py`):
+DDAD-guided algorithm (`DDAD/reconstruction.py`):
 * `x_t* = sqrt(ᾱ_t*)·x + sqrt(1−ᾱ_t*)·ε`;
 * reverse DDIM-style over `range(0, t*, skip)`, i.e. 10 steps for 250/25;
 * conditioning `ε̂ = ε − sqrt(1−ᾱ)·w·(y_t − x_t)`, with `y0 = x` (the input itself);
@@ -384,7 +384,7 @@ Effective σ = `sqrt(1−ᾱ_250)` = **0.68987**.
 
 | Dataset (dir) | Sampler | Checkpoint (as recorded) | w | t* | skip (reverse steps) | eta | β | Draws / sample | Source |
 |---|---|---|---|---|---|---|---|---|---|
-| MVTec 14 + pill `_1` (`recons/results_patches_ddad_native_<cat>_<sub>_1`) | DDAD-native | `<DDAD ckpt root>/<cat>/<epoch>`. **Epochs**: bottle 1000, cable 3000, capsule 1500, carpet 2500, grid 2000, hazelnut 2000, leather 2000, metal_nut 3000, pill 1000, screw 2000, tile 1000, toothbrush 2000, transistor 2000, wood 2000, zipper 1000 | 2.0 | 250 | 25 (10) | 1.0 | linear 1e-4..0.02, T=1000 | 40 (seeds 0-39; verified 40 on disk for all 1725 samples) | metadata |
+| MVTec 14 + pill `_1` (`recons/results_patches_ddad_native_<cat>_<sub>_1`) | DDAD-guided | `<DDAD ckpt root>/<cat>/<epoch>`. **Epochs**: bottle 1000, cable 3000, capsule 1500, carpet 2500, grid 2000, hazelnut 2000, leather 2000, metal_nut 3000, pill 1000, screw 2000, tile 1000, toothbrush 2000, transistor 2000, wood 2000, zipper 1000 | 2.0 | 250 | 25 (10) | 1.0 | linear 1e-4..0.02, T=1000 | 40 (seeds 0-39; verified 40 on disk for all 1725 samples) | metadata |
 | pill `_3` (paper pill) | UNKNOWN (dir layout `ddad_native_0_4`) | UNKNOWN | ? | ? | ? | ? | ? | 32 (on disk) | **no metadata** |
 | CT (`recons/results_patches_ddad_native_CT_scan`, 100 slices `image_0000-0099`) | **DPS denoising** (`sampling/dps/sample_fast.py`): y = x + σn (all-ones mask), **σ = 0.05** (`configs/ctgrid/sigma0.05.yaml`), **ζ′ = 0.2** (`--scale 0.4 --grad_norm per_sample`), 1000 DDPM steps, linear β, learned variance | `weights/diffusion/ct_dps_model050000.pt` (`ct_model_config.yaml`) | — | — | — (1000) | — | linear 1e-4..0.02, T=1000 | 10 (seed `3·1000003 + image_idx·1009 + draw`) | `recon_metadata.json`; generated 2026-09-25, re-verified 2026-10-05 |
 | xray b1 (`..._xray_scissors_1`) | UNKNOWN from metadata. Tooling (`tools/sigma_sampling_20260916/collect_sigma_sets.py:2,12`) says x-ray sets were flattened from DPS patch dirs `Xray_guided/samples_<P>/Combined_<σ>_sigma_batched_<top>_4` | UNKNOWN (b2 note says `guided_diffusion/Xray_small/model500000.pt`) | — | — | — | — | — | 24 (25 patients), 16 (7 patients) = 6 or 4 patches x 4 | **no metadata** |
