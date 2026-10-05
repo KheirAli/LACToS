@@ -1,0 +1,23 @@
+{
+  "category": "toothbrush",
+  "subcategory": "good",
+  "results_dir": "./results_patches_ddad_native_toothbrush_good_1",
+  "gt_template": "./data/mvtec_ad/toothbrush/ground_truth/{sample}_mask.png",
+  "samples": [],
+  "failed": [
+    "samples_000",
+    "samples_001",
+    "samples_002",
+    "samples_003",
+    "samples_004",
+    "samples_005",
+    "samples_006",
+    "samples_007",
+    "samples_008",
+    "samples_009",
+    "samples_010",
+    "samples_011"
+  ],
+  "per_sample": {},
+  "averaged": {}
+}

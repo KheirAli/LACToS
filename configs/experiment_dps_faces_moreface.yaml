@@ -1,0 +1,68 @@
+# Eval DPS-guided recons for the new moreface faces set (faces_guided/samples_moreface_*).
+# Patch dirs: Combined_0.5_sigma_batched_{idx}_4/inpainting/{input,recon,label}
+
+sampling:
+  enabled: false
+  num_patches: 24
+  model: {config: configs/model_config.yaml, checkpoint: null}
+  diffusion: {sampler: ddpm, steps: 1000, noise_schedule: linear, model_mean_type: epsilon, model_var_type: learned_range, timestep_respacing: "1000"}
+  conditioning: {method: ps, scale: 0.5}
+  measurement:
+    operator: inpainting
+    noise: {type: gaussian, sigma: 0.5}
+    mask: {type: refined_box, image_size: 256, mask_len_range: [128, 129], mask_prob: 0.9}
+  patch_size: 64
+  gpu_ids: [0]
+  seed: 0
+
+data:
+  image_dir: ./data/faces_moreface28/test/random
+  figures_dir: ./figures_faces_moreface
+  results_dir: ./results_patches_dps_guided_faces_random
+  sample_name: samples_moreface_0
+  test_origin: Combined_0.5_sigma_batched
+  bottom_suffix: "4"
+  gt_mask:
+    path: ./data/faces_moreface28/ground_truth/random/{sample}_mask.png
+    downsample_factor: 1    # masks are already 256x256
+
+embeddings:
+  backbone: resnet101
+  layers: [layer1, layer2, layer3]
+  use_patch_context: true
+  patchify_size: 3
+  proj_dim_per_layer: null
+  device: cuda
+
+pca:
+  n_components: 5
+
+superpixels:
+  var_threshold: 0.0
+  min_pixels: 20
+  max_sub: 6
+  max_depth: 4
+  compactness: 12.0
+  alpha_grad: 10.0
+  target_size: 10
+
+scoring:
+  bins_rgb: 32
+  bins_pca: 16
+  smooth_sigma: 0.1
+  min_pixels: 2
+  use_label_as_target: true
+  eps: 1.0e-12
+  n_realizations: 1000
+  lg_metric: typicality_unsigned
+
+eval:
+  delta_smooth_sigmas: [null, 5.0, 10.0, 20.0]
+  sp_anomaly_threshold: 0.5
+  save_plots: false
+  output_dir: ./results_eval_faces_moreface
+
+baselines:
+  enabled: false
+  simplenet: {enabled: false, repo_dir: ".", results_dir: ".", category: faces}
+  ddad: {enabled: false, repo_dir: ".", config: ".", category: faces, checkpoint_epoch: 2000}

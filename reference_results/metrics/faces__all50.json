@@ -1,0 +1,18 @@
+{
+ "n_maps": 50,
+ "pooled_auroc": 0.8255154854821015,
+ "pooled_aupr": 0.22023236272140181,
+ "pooled_f1max": 0.281540518020456,
+ "aupro": 0.4563056064552555,
+ "n_regions": 93,
+ "pooled_snr": 1.6445100393729428,
+ "pooled_mask_mse": 0.06650589759461582,
+ "n_images": 50,
+ "per_image_auroc": 0.8408750450612159,
+ "per_image_ap": 0.29849630164206825,
+ "per_image_f1max": 0.3426263110983844,
+ "per_image_snr": 2.8256636892696996,
+ "per_image_snr_paper": 3.524984817427077,
+ "per_image_mask_mse": 0.06650589759461582,
+ "psnr_db": 13.156564064883737
+}

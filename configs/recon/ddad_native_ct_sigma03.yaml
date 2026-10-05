@@ -1,0 +1,20 @@
+# CT, DDAD-native conditioned denoising at effective sigma ~0.30 (100 imgs x 40 seeds).
+# t* = 93 gives effective_sigma = 0.3004 (reference CT run used t* = 250 -> 0.6899).
+# skip = 9 keeps ~10 DDIM reverse steps, matching the reference recipe's step count.
+sampler:
+  name: ddad_native
+  params:
+    w: 2.0
+    test_trajectoy_steps: 93
+    skip: 9
+    eta: 1.0
+    trajectory_steps: 1000
+    beta_start: 0.0001
+    beta_end: 0.02
+
+ckpt: ./weights/ddad_unet/combined/2000
+image_dir: ./data/id_new_warped_images/OOD_moderate_medium/4
+samples: ["image_0000", "image_0001", "image_0002", "image_0003", "image_0004", "image_0005", "image_0006", "image_0007", "image_0008", "image_0009", "image_0010", "image_0011", "image_0012", "image_0013", "image_0014", "image_0015", "image_0016", "image_0017", "image_0018", "image_0019", "image_0020", "image_0021", "image_0022", "image_0023", "image_0024", "image_0025", "image_0026", "image_0027", "image_0028", "image_0029", "image_0030", "image_0031", "image_0032", "image_0033", "image_0034", "image_0035", "image_0036", "image_0037", "image_0038", "image_0039", "image_0040", "image_0041", "image_0042", "image_0043", "image_0044", "image_0045", "image_0046", "image_0047", "image_0048", "image_0049", "image_0050", "image_0051", "image_0052", "image_0053", "image_0054", "image_0055", "image_0056", "image_0057", "image_0058", "image_0059", "image_0060", "image_0061", "image_0062", "image_0063", "image_0064", "image_0065", "image_0066", "image_0067", "image_0068", "image_0069", "image_0070", "image_0071", "image_0072", "image_0073", "image_0074", "image_0075", "image_0076", "image_0077", "image_0078", "image_0079", "image_0080", "image_0081", "image_0082", "image_0083", "image_0084", "image_0085", "image_0086", "image_0087", "image_0088", "image_0089", "image_0090", "image_0091", "image_0092", "image_0093", "image_0094", "image_0095", "image_0096", "image_0097", "image_0098", "image_0099"]
+num_seeds: 40
+out_root: ./recons/results_patches_ddad_native_CT_scan_4
+bottom_suffix: "4"

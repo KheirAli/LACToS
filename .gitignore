@@ -1,0 +1,24 @@
+# release assets (download with scripts/download_assets.sh; see docs/DATA.md)
+/weights
+/data
+/recons
+/.assets_cache/
+# runtime outputs / caches (superpixel masks are regenerated deterministically)
+/results_eval_*/
+/figures*/
+/logs/
+*.npz
+*.pth
+*.pt
+# python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+.ipynb_checkpoints/
+# editor / OS
+.vscode/
+.idea/
+.DS_Store
+*.bak*
+*.swp

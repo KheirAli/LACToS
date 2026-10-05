@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the paper below."
+title: "LACToS: local anomaly detection with diffusion reconstructions and superpixel typical sets"   # TODO(maintainers): exact paper title
+authors:                                    # TODO(maintainers): full author list
+  - family-names: "TODO"
+    given-names: "TODO"
+    affiliation: "Georgia Institute of Technology"
+repository-code: "https://github.com/TODO/LACToS"   # TODO
+license: "TODO"                                     # TODO: must match LICENSE
+version: "1.0.0"
+date-released: "2026-10-05"
+preferred-citation:
+  type: article
+  title: "TODO"
+  authors:
+    - family-names: "TODO"
+      given-names: "TODO"
+  journal: "TODO"
+  year: 2026
