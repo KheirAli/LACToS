@@ -42,7 +42,7 @@ run_pill() {                   # pill: plain evaluate.py (torchvision IMAGENET1K
   $SEEDED evaluate.py --config configs/experiment_ddad_native.yaml \
     --category pill --all_subcategories --results_root "$RECON" --gt_root "$DATA/pill/ground_truth" \
     --autoencoder_path "$AE/pill.pth" $COMMON --max_reconstructions 50 --results_suffix _3 --output_dir "$OUT/json/mvtec/pill"; }
-run_CT() {                     # CT (100 slices): IMAGENET1K_V2 backbone, CT AE, 64/64 bins, 40 DDAD-native draws
+run_CT() {                     # CT (100 slices): IMAGENET1K_V2 backbone, CT AE, 64/64 bins, 10 DPS-denoising draws (sigma=0.05, zeta'=0.2)
   DUMP_DELTA_DIR="$OUT/maps/CT/ct100" CUDA_VISIBLE_DEVICES="$GPU" \
   $SEEDED evaluate.py --config configs/experiment_ddad_native_xray.yaml \
     --category CT --subcategory scan --results_root "$RECON" --gt_root "$DATA/CT/ground_truth" \

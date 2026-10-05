@@ -18,6 +18,6 @@ use_fp16: False
 use_new_attention_order: False
 
 # CT-only checkpoint:
-model_path: ./weights/dps/xray_model500000.pt   # guided-diffusion X-ray UNet (not released)
+model_path: ../../weights/diffusion/xray_dps_model500000.pt   # relative to sampling/dps/
 # Alternative (model trained on all categories, currently active in model_config.yaml):
 # (overridden at runtime by run_ct_reconstruction.sh via CKPT_PATH)

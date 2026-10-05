@@ -12,7 +12,7 @@ superpixel (`ood/superpixels.py`) by how far its RGB and latent histograms fall 
 form a delta map, which is smoothed and compared against the ground-truth masks.
 
 ```
-test image ──► diffusion reconstructions (DDAD-native / DPS, shipped)
+test image ──► M conditional diffusion reconstructions (shipped)
            ──► ResNet-101 pixel features ──► PixelAutoEncoder (1792→3)
            ──► superpixels ──► typical-set score  Δ = (NLL_rgb − H_rgb) + (NLL_lat − H_lat)
            ──► Gaussian smoothing (σ=5) ──► pixel AUROC / AP / F1max / AUPRO / SNR
@@ -30,6 +30,20 @@ computational reasons: a full joint histogram over (R, G, B, z₁, z₂, z₃) w
 per superpixel, while each superpixel only provides ~25 pixels × M reconstructions (~10³ samples),
 so it could neither be stored nor estimated reliably.
 
+**One algorithm for every dataset.** LACToS has a single pipeline: (1) draw M diffusion
+reconstructions conditioned on the test image, (2) embed and compress them, (3) score superpixels with
+the typical-set deviation above. Steps 2–3 are identical for all datasets. Step 1 only needs *some*
+conditional diffusion sampler that returns M plausible in-distribution versions of the test image; the
+released reconstruction sets were produced with:
+
+| Data | Conditional sampler | Draws per image |
+|---|---|---:|
+| MVTec AD (15 categories) | DDAD-guided denoising (w = 2, t* = 250, DDAD UNet per category) | 40 (pill 32) |
+| CT | DPS denoising, y = x + σn with σ = 0.05, ζ′ = 0.2 (CT diffusion prior) | 10 |
+| X-ray (DvXray), faces | DPS patch inpainting (Chung et al., 2023) | 16–48 |
+
+Sampler details and how to regenerate or add reconstructions: [sampling/README.md](sampling/README.md).
+
 Evaluated on all 15 MVTec-AD categories, a CT anomaly set (100 slices), chest/baggage
 X-ray (DvXray scissors, 72 patients) and masked faces (50 images).
 
@@ -39,7 +53,7 @@ X-ray (DvXray scissors, 72 patients) and masked faces (50 images).
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | .9771 | .9569 | .9553 | .9259 | .9126 | .9688 | .9842 | .9580 | .9193 | .9231 | .9007 | .9477 | .9432 | .8912 | .9666 | **.9420** |
 
-CT .9378 · X-ray (b1, 32 patients) .9528 · faces (random22) .9105.
+CT .9463 · X-ray (b1, 32 patients) .9528 · faces (random22) .9105.
 Full metric table (AUROC, SNR, AP, MSE, F1max, AUPRO) and the verification log:
 [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md).
 
@@ -48,7 +62,7 @@ Full metric table (AUROC, SNR, AP, MSE, F1max, AUPRO) and the verification log:
 | Stage | What | Entry point | Needed to reproduce the paper? |
 |---|---|---|---|
 | 0 | Get data, weights and reconstructions | `scripts/download_assets.sh` → [docs/DATA.md](docs/DATA.md) | yes |
-| 1 | Diffusion reconstructions (DDAD-native / DPS) | [`sampling/`](sampling/README.md): `tools/generate_recons.py`, `sampling/dps/` | no (released) |
+| 1 | Conditional diffusion reconstructions (M per test image) | [`sampling/`](sampling/README.md): `tools/generate_recons.py`, `sampling/dps/` | no (released) |
 | 2 | Train the per-target PixelAutoEncoder | `embedder/train_pixel_ae_interp.py` (seeded), `embedder/train_embedder.py` (original recipe) | no (released) |
 | 3 | Evaluate (superpixel typical-set delta maps) | `scripts/run_reproduce.sh` → `evaluate.py`, `embedder/evaluate_ddad_fe.py` | yes |
 | 4 | Metrics + comparison with the paper | `scripts/score_metrics.sh`, `scripts/summarize_results.py` | yes |
@@ -111,7 +125,7 @@ super_pixel_generation.py   superpixel mask generation (cached under figures*/, 
 ood/                        core package: data loading, superpixels, embeddings, typical-set scoring, metrics, samplers
 embedder/                   evaluate_ddad_fe.py (backbone-weight injection), train_pixel_ae_interp.py / train_embedder.py (AE training)
 sampling/                   reconstruction generation: DPS sampler (sampling/dps/), output wiring scripts, README
-tools/                      seeded_run.py, generate_recons.py (DDAD-native sampler driver), prepare_xray_dataset.py, metrics/
+tools/                      seeded_run.py, generate_recons.py (DDAD-guided sampler driver), prepare_xray_dataset.py, metrics/
 configs/                    evaluation YAMLs; configs/recon/ = sampler YAMLs for tools/generate_recons.py
 scripts/                    run_reproduce.sh, score_metrics.sh, summarize_results.py, check_env.sh, download/make assets
 DDAD/                       DDAD implementation (Mousakhan et al.): UNet training + DDAD-native sampling backend

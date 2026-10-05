@@ -6,7 +6,7 @@
 #
 # Groups: weights data  bottle cable capsule carpet grid hazelnut leather metal_nut pill screw
 #         tile toothbrush transistor wood zipper  CT xray faces faces_moreface
-# `weights` and `data` are needed for every target.
+# `weights` and `data` are needed for every target; `diffusion` (diffusion priors) only for re-sampling.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"; cd "$ROOT"
 BASE_URL="${BASE_URL:-https://REPLACE-ME/lactos-assets}"   # TODO(maintainers): set after uploading the release
@@ -18,7 +18,7 @@ GROUPS_=("$@"); [ "${#GROUPS_[@]}" -eq 0 ] && GROUPS_=("${ALL[@]}")
 fetch() { local f="$1"; [ -f "$DL/$f" ] || curl -fL --retry 3 -o "$DL/$f" "$BASE_URL/$f"; }
 fetch SHA256SUMS
 for g in "${GROUPS_[@]}"; do
-  case "$g" in weights) f=lactos_weights.tar.gz ;; data) f=lactos_data.tar ;; *) f=lactos_recons_$g.tar ;; esac
+  case "$g" in weights) f=lactos_weights.tar.gz ;; diffusion) f=lactos_diffusion.tar ;; data) f=lactos_data.tar ;; *) f=lactos_recons_$g.tar ;; esac
   echo "== $g ($f)"; fetch "$f"
   ( cd "$DL" && grep " $f\$" SHA256SUMS | sha256sum -c - )
   tar xf "$DL/$f" -C "$ROOT"

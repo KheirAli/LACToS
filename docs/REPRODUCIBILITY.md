@@ -40,7 +40,7 @@ deterministic up to floating-point summation order on the GPU.
 | wood | 0.8912 | .8912 | 0 |
 | zipper | 0.9666 | .9666 | 0 |
 | **MVTec mean** | **0.9420** | **.9420** | 0 |
-| CT (100 slices) | 0.9378 | .9378 | 0 |
+| CT (100 slices, DPS σ=0.05) | 0.9463 | .9463 | 0 |
 | X-ray b1 (32 patients) | 0.9526 | .9528 | −0.0002 |
 | faces random22 | 0.9105 | .9105 | 0 |
 
@@ -54,11 +54,13 @@ exactly. The difference is below the precision reported in the paper's tables.
 | Dataset | AUROC | SNR | AP | MSE | F1max (img) | F1max (pooled) | AUPRO (FPR ≤ 0.3) |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | MVTec (15 cats) | 94.13 | 4.81 | 49.25 | 0.0491 | 51.52 | 46.11 | 79.41 |
-| CT (100) | 93.78 | 1.82 | 55.39 | 0.2375 | 55.01 | 50.28 | 80.53 |
+| CT (100) | 94.63 | 1.84 | 48.53 | 0.2475 | 49.55 | 37.64 | 82.70 |
 | faces (50 = random22 + moreface28) | 84.09 | 2.83 | 29.85 | 0.0665 | 34.26 | 28.15 | 45.63 |
 | X-ray (72 = b1 + b2) | 94.22 | 2.79 | 11.67 | 0.0253 | 18.24 | 10.37 | 72.09 |
 
-Every entry matches the paper's table to within 0.03 points. Pooled-mode rows are printed by
+Every entry matches the reference to within 0.03 points. CT is the DPS-denoising set (σ = 0.05, ζ′ = 0.2,
+10 draws); its numbers match the original 2026-09-25 run (`cts005z02full`) exactly. An earlier CT set
+made with the DDAD-guided sampler (40 draws) gives 0.9378 and is not part of the release. Pooled-mode rows are printed by
 `summarize_results.py` as well.
 
 ## Determinism notes

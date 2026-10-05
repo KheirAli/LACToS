@@ -1,5 +1,10 @@
 # Sampling: generating diffusion reconstructions
 
+Stage 1 of LACToS is a single step: **draw M diffusion reconstructions conditioned on the test image.**
+Everything downstream (features, autoencoder, superpixel typical-set score, metrics) is the same for
+every dataset and only reads the reconstructions from `recons/`. Any conditional diffusion sampler that
+writes this layout can be plugged in. The two samplers below are the ones that produced the released sets.
+
 The evaluation consumes **M stochastic reconstructions per test image** stored as
 
 ```
@@ -11,16 +16,16 @@ The reconstructions behind the paper are released (`scripts/download_assets.sh`)
 stage to regenerate them or to run LACToS on new data. Exact hyperparameters per dataset, including the
 ones that were not recorded, are in [docs/HYPERPARAMETERS.md §5](../docs/HYPERPARAMETERS.md).
 
-Two samplers were used:
+Samplers behind the released reconstructions:
 
 | Dataset | Sampler | Code | Diffusion checkpoint (not released) |
 |---|---|---|---|
 | MVTec AD (15 categories) | DDAD-native conditioned denoising (w=2, t*=250, skip 25, 40 draws) | `tools/generate_recons.py` + `configs/recon/ddad_native_*.yaml` + `DDAD/` | DDAD UNet per category (`weights/ddad_unet/<cat>/<epoch>`) |
-| CT (100 slices) | DDAD-native (same settings, 40 draws) | same, `configs/recon/ddad_native_ct_sigma03.yaml` / `ddad_native_xray.yaml` (CT despite the name) | DDAD UNet `combined/2000` (CT) |
-| X-ray (DvXray scissors) | DPS patch inpainting | `sampling/dps/` + `sampling/wire_dps_xray.py` | guided-diffusion X-ray UNet (`model500000.pt`) |
-| Faces (random22, moreface28) | DPS patch inpainting, FFHQ prior, σ = 0.5 | `sampling/dps/` (DPS codebase) | `ffhq_10m.pt` (public DPS release) |
+| CT (100 slices) | DPS denoising: y = x + σn, σ = 0.05, ζ′ = 0.2, 10 draws | `sampling/dps/sample_fast.py` + `sampling/wire_dps_ct.py` | `weights/diffusion/ct_dps_model050000.pt` |
+| X-ray (DvXray scissors) | DPS patch inpainting | `sampling/dps/` + `sampling/wire_dps_xray.py` | `weights/diffusion/xray_dps_model500000.pt` |
+| Faces (random22, moreface28) | DPS patch inpainting, FFHQ prior, σ = 0.5 | `sampling/dps/` (DPS codebase) | `weights/diffusion/ffhq_10m.pt` (public DPS model) |
 
-## A. DDAD-native (MVTec, CT)
+## A. DDAD-guided denoising (MVTec)
 
 1. Train or download a DDAD UNet per category. Training uses `DDAD/main.py --train True` with
    `DDAD/config_<cat>.yaml`; the original DDAD checkpoints are linked from `DDAD/README.md`. Put them
@@ -40,7 +45,7 @@ python tools/generate_recons.py --sampler ddad_native --ckpt weights/ddad_unet/c
 Draw k is seeded with `torch.manual_seed(k)`. A `recon_metadata.json` with every setting is written
 next to the samples.
 
-## B. DPS patch inpainting (X-ray, faces; also CT ablations)
+## B. DPS (CT denoising; X-ray and faces patch inpainting)
 
 `sampling/dps/` is the DPS sampler (Chung et al., ICLR 2023) with batched N-measurements-per-patch
 sampling:
@@ -63,6 +68,23 @@ python sample_fast.py --model_config configs/xray_model_config.yaml \
     --task_config configs/xray_inpainting_config.yaml --data_root <images> \
     --save_dir outputs/xray --num_measurements 10 --batch 20 --scale 1.0 --grad_norm per_sample
 ```
+
+**CT, exactly as released** (100 slices, 10 draws each; ζ′ = scale / 2 with per-sample normalized steps;
+seeds are per (image, draw), so shards and reruns give identical draws):
+
+```bash
+cd sampling/dps
+python sample_fast.py --model_config configs/ct_model_config.yaml \
+    --task_config configs/ctgrid/sigma0.05.yaml --data_root ../../data/mvtec_ad/CT/test/random \
+    --save_dir outputs/CT_sigma0.05_zeta0.2 --num_measurements 10 --batch 25 \
+    --scale 0.4 --grad_norm per_sample            # add --shard g --num_shards N to split over GPUs
+cd ../..
+python sampling/wire_dps_ct.py --src sampling/dps/outputs/CT_sigma0.05_zeta0.2 \
+    --dst recons/results_patches_ddad_native_CT_mine --sigma 0.05
+```
+
+`sample_fast.py` checks that the measurement mask is all ones, so the "inpainting" operator in the task
+config is a pure denoising measurement y = x + σn. Other σ values: `configs/ctgrid/sigma{0.02,0.1,0.2,0.4}.yaml`.
 
 Then convert the outputs into the evaluation layout:
 

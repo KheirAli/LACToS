@@ -13,7 +13,7 @@ import glob, json, os, statistics as st
 OUT = os.environ.get("OUT", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "results_eval_reproduction"))
 REF_AUC = {"bottle": .9771, "cable": .9569, "capsule": .9553, "carpet": .9259, "grid": .9126, "hazelnut": .9688,
            "leather": .9842, "metal_nut": .9580, "pill": .9193, "screw": .9231, "tile": .9007, "toothbrush": .9477,
-           "transistor": .9432, "wood": .8912, "zipper": .9666, "CT": .9378, "xray_b1": .9528, "faces_random22": .9105}
+           "transistor": .9432, "wood": .8912, "zipper": .9666, "CT": .9463, "xray_b1": .9528, "faces_random22": .9105}
 CATS = [c for c in REF_AUC if c not in ("CT", "xray_b1", "faces_random22")]
 
 def subcat_mean(summary):
@@ -47,7 +47,7 @@ if len(mv) == 15: print(f"  {'MVTec mean':16s} {st.mean(mv):12.4f} {0.9420:10.4f
 R = f"{OUT}/metrics"
 REF = {  # reference "Ours" rows, image-averaged: AUROC SNR AP MSE F1img F1pooled AUPRO  (main_all_both_modes.md)
     "MVTec (15 cats)": (94.13, 4.81, 49.25, 0.0491, 51.52, 46.11, 79.41),
-    "CT (100)":        (93.77, 1.82, 55.38, 0.2375, 54.99, 50.28, 80.52),
+    "CT (100)":        (94.63, 1.84, 48.53, 0.2475, 49.55, 37.64, 82.70),   # DPS denoising sigma=0.05 zeta'=0.2
     "faces (50)":      (84.09, 2.83, 29.83, 0.0665, 34.27, 28.15, 45.63),
     "xray (72)":       (94.22, 2.79, 11.64, 0.0253, 18.23, 10.37, 72.08)}
 KI = ["per_image_auroc", "per_image_snr", "per_image_ap", "per_image_mask_mse", "per_image_f1max", "pooled_f1max", "aupro"]

@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"; cd "$ROOT"; ok=0; bad=0
 chk() { if [ -e "$1" ]; then ok=$((ok+1)); else bad=$((bad+1)); echo "  MISSING: $1"; fi; }
 R=recons/results_patches_ddad_native
 echo "== weights (sha256, docs/REPRODUCIBILITY.md)"
-if [ -d weights ]; then sha256sum -c --quiet weights.sha256 && echo "  21/21 weight files match" || bad=$((bad+1)); else echo "  MISSING: weights/ (bash scripts/download_assets.sh weights)"; bad=$((bad+1)); fi
+if [ -d weights ]; then { [ -d weights/diffusion ] && cat weights.sha256 || grep -v " weights/diffusion/" weights.sha256; } | sha256sum -c --quiet - && echo "  weight files match (diffusion priors optional)" || bad=$((bad+1)); else echo "  MISSING: weights/ (bash scripts/download_assets.sh weights)"; bad=$((bad+1)); fi
 echo "== reconstructions"
 for c in bottle cable capsule carpet grid hazelnut leather metal_nut screw tile toothbrush transistor wood zipper; do
   n=$(ls -d ${R}_${c}_*_1 2>/dev/null | wc -l); [ "$n" -gt 0 ] && ok=$((ok+1)) || { bad=$((bad+1)); echo "  MISSING: ${R}_${c}_*_1"; }; done

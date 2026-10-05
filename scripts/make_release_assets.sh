@@ -13,6 +13,7 @@ SRC="${SRC:-$ROOT}"; DEST="${DEST:?set DEST to an output directory with ~10 GB f
 mkdir -p "$DEST"; cd "$SRC"
 
 tar czhf "$DEST/lactos_weights.tar.gz" weights/ae weights/backbones weights/torch
+[ -d weights/diffusion ] && tar chf "$DEST/lactos_diffusion.tar" weights/diffusion   # only needed to re-sample
 tar chf  "$DEST/lactos_data.tar" data
 
 R=recons/results_patches_ddad_native

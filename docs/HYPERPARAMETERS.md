@@ -30,12 +30,16 @@ Conventions:
 
 LACToS scores a test image `x` as follows.
 
-**(A) Reconstruction (offline; outputs are shipped, `--skip_sampling`).** A diffusion model produces M
-stochastic reconstructions of `x`.
-* MVTec and CT use **DDAD-native** conditioned denoising (`ood/samplers/ddad_native.py`, via
+**(A) Reconstruction (offline; outputs are shipped, `--skip_sampling`).** A conditional diffusion
+sampler produces M stochastic reconstructions of `x`. This is the only dataset-dependent stage; stages
+B–F are identical for all datasets.
+* MVTec uses **DDAD-guided** conditioned denoising (`ood/samplers/ddad_native.py`, via
   `tools/generate_recons.py`).
-* Faces and, judging by the tooling, x-ray use **DPS patch inpainting** with an external DPS repository.
-  Those images were copied ("flattened") into the `ddad_native_0_4` directory layout.
+* CT uses **DPS denoising** (`sampling/dps/sample_fast.py`): measurement y = x + σn with σ = 0.05,
+  ζ′ = 0.2, CT diffusion prior, 10 draws per slice.
+* Faces and x-ray use **DPS patch inpainting**.
+* All sets are stored in the same `ddad_native_0_4` directory layout, so the evaluation reads them
+  identically.
 
 **(B) Feature embedding.** Each reconstruction and the input image pass through a ResNet-101.
 * The backbone is either torchvision ImageNet weights or weights injected through `DDAD_FE_WEIGHTS`.
@@ -144,7 +148,7 @@ says not to pass `--autoencoder_path` and to use PCA, but every paper run passes
 | `bottom_suffix` | `data.bottom_suffix` | none, required | `"4"` everywhere | recon subdir suffix |
 | `num_patches` | `sampling.num_patches` | 24 (`evaluate.py:1191`) | 1 (DDAD-native YAMLs); 24 (moreface YAML) | patch indices `0..num_patches-1` are scanned and missing ones skipped with a warning. Moreface: only patches 8, 12-14, 16-23 (12 patches) exist at σ=0.5, so 12x4 = 48 draws. The `Combined_1.0_*` dirs are ignored |
 | label image | — | first of patch 0..49, `0_00000.png` or `00000.png` (`ood/data.py:227`) | — | input image `x` |
-| `max_reconstructions` (M cap) | `--max_reconstructions` / `sampling.max_reconstructions` | None (all draws) | MVTec 50, pill 50, CT 40, xray 40, faces none | cap only. **No paper run subsamples**: MVTec dirs hold 40 draws, pill_3 32, CT 40, xray b1 24 (25 samples) or 16 (7 samples), b2 32, faces 48, moreface 48 (counted on disk). So `ABL_SEED` and `np.random.choice` never run |
+| `max_reconstructions` (M cap) | `--max_reconstructions` / `sampling.max_reconstructions` | None (all draws) | MVTec 50, pill 50, CT 40, xray 40, faces none | cap only. **No paper run subsamples**: MVTec dirs hold 40 draws, pill_3 32, CT 10, xray b1 24 (25 samples) or 16 (7 samples), b2 32, faces 48, moreface 48 (counted on disk). So `ABL_SEED` and `np.random.choice` never run |
 | `sampling.enabled` | YAML | forced `False` (1791) | False | — |
 | other `sampling.*` (model, diffusion, conditioning, measurement, patch_size, gpu_ids, seed) | YAML | — | — | **not read** by evaluation; documentation only ("kept for schema completeness") |
 
@@ -253,7 +257,7 @@ through `seeded_run.py`.
 |---|---|---|---|---|---|---|
 | 1-14 | bottle, cable, capsule, carpet, grid, hazelnut, leather, metal_nut, screw, tile, toothbrush, transistor, wood, zipper | `evaluate_ddad_fe.py` | `experiment_ddad_native.yaml` | `weights/backbones/resnet101_imagenet1k_v1.pth` (= torchvision IMAGENET1K_V1) | `weights/ae/<cat>.pth`; carpet and wood: same naming (corrected seeded recipe) | `recons/results_patches_ddad_native_<cat>_<sub>_1` (all subdirs including `good`/`combined`; those two are excluded at scoring) |
 | 15 | pill | `evaluate.py` | `experiment_ddad_native.yaml` | torchvision IMAGENET1K_V2 (no injection) | `weights/ae/pill.pth` | `recons/results_patches_ddad_native_pill_<sub>_3` (color, combined, contamination, crack, faulty_imprint, pill_type, scratch; no `good_3`) |
-| 16 | CT (100 slices) | `evaluate.py` | `experiment_ddad_native_xray.yaml` (the CT eval config despite its name) | torchvision V2 | `weights/ae/CT.pth` | `recons/results_patches_ddad_native_CT_scan` (`--subcategory scan`; 100 slices x 40 DDAD-native draws) |
+| 16 | CT (100 slices) | `evaluate.py` | `experiment_ddad_native_xray.yaml` (the CT eval config despite its name) | torchvision V2 | `weights/ae/CT.pth` | `recons/results_patches_ddad_native_CT_scan` (`--subcategory scan`; 100 slices x 10 DPS-denoising draws) |
 | 17 | xray b1 (32 patients) | `evaluate_ddad_fe.py` | `experiment_ddad_native_xray_real.yaml` | `weights/backbones/xray_ddad_lastlayer_feat4.pth` | `weights/ae/xray.pth` | `recons/results_patches_ddad_native_xray_scissors_1` (`--subcategory scissors`) |
 | 18 | xray b2 (40 patients) | same | same | same | same | `recons/results_patches_ddad_native_xray_scissors_b2_500k` |
 | 19 | faces random22 | `evaluate.py` | `experiment_ddad_native_faces.yaml` | torchvision V2 | `weights/ae/faces.pth` | `recons/results_patches_ddad_native_faces_random_1` (24 sample dirs; `samples_5` and `samples_98` have no GT and are skipped, leaving 22) |
@@ -265,7 +269,7 @@ through `seeded_run.py`.
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | MVTec 14 | 32 | 32 | 3 | 30 | 1.0 / 1.0 | 1 | — (ignored anyway) | 50 -> **40** | no | 5 | `data/mvtec_ad/<cat>/ground_truth` (downsample 4) |
 | pill | 32 | 32 | 3 | 30 | 1.0 / 1.0 | 1 | — | 50 -> **32** | no | 5 | `data/mvtec_ad/pill/ground_truth` |
-| CT | **64** | **64** | 3 | 30 | 12.0 / 10.0 | 1 (RGB dense; **latent sparse, so unsmoothed**) | 1.0 (ignored) | 40 -> **40** | **yes** (1-D, 64 bins) | 5 | passed but unused; masks via `OOD_CT_MASK_ROOT`, valid = body mask |
+| CT | **64** | **64** | 3 | 30 | 12.0 / 10.0 | 1 (RGB dense; **latent sparse, so unsmoothed**) | 1.0 (ignored) | 40 -> **10** | **yes** (1-D, 64 bins) | 5 | passed but unused; masks via `OOD_CT_MASK_ROOT`, valid = body mask |
 | xray b1 | 32 | 32 | 3 | 30 | 12.0 / 10.0 | 1 | — | 40 -> **24** (25 patients) / **16** (7 patients) | no | 5 | `data/mvtec_ad/xray/ground_truth` (downsample 1) |
 | xray b2 | 32 | 32 | 3 | 30 | 12.0 / 10.0 | 1 | — | 40 -> **32** | no | 5 | same |
 | faces random22 | 32 | 32 | 3 | 30 | 12.0 / 10.0 | 1 | 1.0 (ignored) | none -> **48** | no | 5 | `data/mvtec_ad/faces/ground_truth` |
@@ -345,7 +349,7 @@ Not used for paper numbers: `xray_mine/mixed_k3.pth` (encoder conv0 3x3) and `xr
 REPRODUCE_RESULTS.md §6 ("fully seeded end-to-end") describes a **different** recipe
 (`--latent_dim 3 --num_epochs 30 --seed 0 --n_restarts 3`, cos/mse_var; xray `mse_cos --n_restarts 2
 --max_images 500`; faces capped at 500 images). Its numbers differ from the released checkpoints (for
-example CT 0.8716 vs 0.9378), and its driver `train_and_evaluate_seeded.sh` is not in the package.
+example CT 0.8716 vs 0.9378, both measured on the earlier DDAD CT reconstructions), and its driver `train_and_evaluate_seeded.sh` is not in the package.
 
 ### 4.3 Backbone fine-tuning (feat0 / feat4)
 
@@ -382,7 +386,7 @@ Effective σ = `sqrt(1−ᾱ_250)` = **0.68987**.
 |---|---|---|---|---|---|---|---|---|---|
 | MVTec 14 + pill `_1` (`recons/results_patches_ddad_native_<cat>_<sub>_1`) | DDAD-native | `<DDAD ckpt root>/<cat>/<epoch>`. **Epochs**: bottle 1000, cable 3000, capsule 1500, carpet 2500, grid 2000, hazelnut 2000, leather 2000, metal_nut 3000, pill 1000, screw 2000, tile 1000, toothbrush 2000, transistor 2000, wood 2000, zipper 1000 | 2.0 | 250 | 25 (10) | 1.0 | linear 1e-4..0.02, T=1000 | 40 (seeds 0-39; verified 40 on disk for all 1725 samples) | metadata |
 | pill `_3` (paper pill) | UNKNOWN (dir layout `ddad_native_0_4`) | UNKNOWN | ? | ? | ? | ? | ? | 32 (on disk) | **no metadata** |
-| CT (`recons/results_patches_ddad_native_CT_scan`, 100 slices `image_0000-0099`) | DDAD-native | `<DDAD ckpt root>/combined/2000` (the CT UNet; DDAD's `config.yaml` marks `combined` as CT) | 2.0 | 250 | 25 (10) | 1.0 | linear | 40 | metadata. `image_dir` recorded as `id_new_warped_images/OOD_moderate_medium/4`; listed samples are `image_0011..0100`, so `image_0000-0010` came from an earlier invocation (**UNKNOWN** whether identical settings). the original recon config (not released) says `/1`, not `/4` |
+| CT (`recons/results_patches_ddad_native_CT_scan`, 100 slices `image_0000-0099`) | **DPS denoising** (`sampling/dps/sample_fast.py`): y = x + σn (all-ones mask), **σ = 0.05** (`configs/ctgrid/sigma0.05.yaml`), **ζ′ = 0.2** (`--scale 0.4 --grad_norm per_sample`), 1000 DDPM steps, linear β, learned variance | `weights/diffusion/ct_dps_model050000.pt` (`ct_model_config.yaml`) | — | — | — (1000) | — | linear 1e-4..0.02, T=1000 | 10 (seed `3·1000003 + image_idx·1009 + draw`) | `recon_metadata.json`; generated 2026-09-25, re-verified 2026-10-05 |
 | xray b1 (`..._xray_scissors_1`) | UNKNOWN from metadata. Tooling (`tools/sigma_sampling_20260916/collect_sigma_sets.py:2,12`) says x-ray sets were flattened from DPS patch dirs `Xray_guided/samples_<P>/Combined_<σ>_sigma_batched_<top>_4` | UNKNOWN (b2 note says `guided_diffusion/Xray_small/model500000.pt`) | — | — | — | — | — | 24 (25 patients), 16 (7 patients) = 6 or 4 patches x 4 | **no metadata** |
 | xray b2 (`..._xray_scissors_b2_500k`) | same evidence: DPS patch inpainting, "sigma-0.3 recons" (`gen_jobs.py:20`), model `Xray_small/model500000.pt` ("same as the b2 main recons", `sample_patch.sh:5`) | `<guided-diffusion ckpts>/Xray_small/model500000.pt` (inferred) | — | — | 1000 DDPM | — | — | 32 (8 patches x 4, inferred) | **no metadata**. σ=0.3 inferred from comments only |
 | faces random22 (`..._faces_random_1`) | DPS patch inpainting, FFHQ prior (`ffhq_10m.pt`), σ=0.5 (RUNBOOK, `scripts/run_reproduce.sh`), flattened 12 patches x 4 | `ffhq_10m.pt` (RUNBOOK §5) | — | — | 1000 DDPM | — | — | 48 | **no metadata** |
