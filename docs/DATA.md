@@ -18,22 +18,23 @@ recons/
   results_patches_dps_guided_faces_random/
 ```
 
-## Release zip files
+## Release files
 
-| File | Contents | Size |
-|---|---|---:|
-| `lactos_data.zip` | `data/`: test images + GT masks (15 MVTec categories, CT, X-ray, faces) | 1.6 GB |
-| `lactos_weights.zip` | `weights/ae`, `weights/backbones`, `weights/torch`: 18 AEs + ResNet-101 backbones | 0.6 GB |
-| `lactos_diffusion.zip` | `weights/diffusion/`: diffusion priors for DPS sampling (CT, X-ray, FFHQ) | 0.8 GB |
-| `lactos_recons_<cat>.zip` (x15) | MVTec reconstructions per category (`_1` suffix; pill `_3`) | 0.12–0.65 GB each, 5.7 GB total |
-| `lactos_recons_CT.zip` | `results_patches_ddad_native_CT_scan` (100 slices x 10 DPS-denoising draws, σ=0.05, ζ′=0.2) | 0.09 GB |
-| `lactos_recons_xray.zip` | `..._xray_scissors_1` (32 patients) + `..._xray_scissors_b2_500k` (40 patients) | 0.12 GB |
-| `lactos_recons_faces.zip` | `..._faces_random_1` (24 faces, 22 with masks) | 0.12 GB |
-| `lactos_recons_faces_moreface.zip` | `results_patches_dps_guided_faces_random` (28 faces) | 1.1 GB |
+| File | Contents | Size | Download |
+|---|---|---:|---|
+| `lactos_weights.tar.gz` | `weights/ae`, `weights/backbones`, `weights/torch`: 18 autoencoders + ResNet-101 backbones | 0.6 GB | [Google Drive](https://drive.google.com/file/d/1N6PpLGLLnyDuDG8ecb0trPyS_rbsLM-x/view?usp=drive_link) |
+| `lactos_diffusion.tar` | `weights/diffusion/`: diffusion priors for DPS sampling (CT, X-ray, FFHQ) | 0.9 GB | [Google Drive](https://drive.google.com/file/d/10jF91HOyhw6VAEEBWKM7GoLMwdcBisaB/view?usp=drive_link) |
+| `lactos_data.zip` | `data/`: test images + GT masks (15 MVTec categories, CT, X-ray, faces) | 1.6 GB | coming soon |
+| `lactos_recons_<cat>.zip` (x15) | MVTec reconstructions per category (`_1` suffix; pill `_3`) | 0.12–0.65 GB each, 5.7 GB total | coming soon |
+| `lactos_recons_CT.zip` | `results_patches_ddad_native_CT_scan` (100 slices x 10 DPS-denoising draws, σ=0.05, ζ′=0.2) | 0.09 GB | coming soon |
+| `lactos_recons_xray.zip` | `..._xray_scissors_1` (32 patients) + `..._xray_scissors_b2_500k` (40 patients) | 0.12 GB | coming soon |
+| `lactos_recons_faces.zip` | `..._faces_random_1` (24 faces, 22 with masks) | 0.12 GB | coming soon |
+| `lactos_recons_faces_moreface.zip` | `results_patches_dps_guided_faces_random` (28 faces) | 1.1 GB | coming soon |
 
-Unzip every file in the repository root (`unzip <file>.zip`); the folders above are created in place.
-Every file is < 2 GB. `SHA256SUMS` lists the checksum of each zip. Maintainers build them with
-`scripts/make_release_assets.sh`.
+Extract every file in the repository root (`tar xzf lactos_weights.tar.gz`, `tar xf lactos_diffusion.tar`,
+`unzip <file>.zip`); the folders above are created in place. `scripts/download_assets.sh` does this
+automatically and checks the SHA-256 of each file (`lactos_weights.tar.gz`: `54c0e293…`,
+`lactos_diffusion.tar`: `25d8b0e9…`; full values in the script). Every file is < 2 GB.
 
 ## Weight inventory (what produced which number)
 

@@ -86,13 +86,19 @@ conda activate lactos
 
 ## 2. Download assets (weights, test data, reconstructions)
 
+| File | Contents | Size | Download |
+|---|---|---:|---|
+| `lactos_weights.tar.gz` | 18 autoencoders + ResNet-101 backbones (needed to run LACToS) | 0.6 GB | [Google Drive](https://drive.google.com/file/d/1N6PpLGLLnyDuDG8ecb0trPyS_rbsLM-x/view?usp=drive_link) |
+| `lactos_diffusion.tar` | diffusion priors for CT, X-ray, FFHQ (only needed to re-sample) | 0.9 GB | [Google Drive](https://drive.google.com/file/d/10jF91HOyhw6VAEEBWKM7GoLMwdcBisaB/view?usp=drive_link) |
+| `lactos_data.zip`, `lactos_recons_<target>.zip` | test images + GT masks; released reconstructions | 1.6 GB; 7 GB | coming soon |
+
 ```bash
-bash scripts/download_assets.sh                      # everything, ~9.5 GB of zip files
-bash scripts/download_assets.sh weights data toothbrush CT   # or just what you need
+bash scripts/download_assets.sh weights diffusion    # downloads from Google Drive, checks SHA-256, extracts here
+# or download manually and extract in the repository root:
+tar xzf lactos_weights.tar.gz && tar xf lactos_diffusion.tar
 bash scripts/check_env.sh                            # checksums, files, env, unit tests
 ```
 
-Or download the zip files manually and `unzip` them in the repository root.
 What each file is and where it came from: [docs/DATA.md](docs/DATA.md).
 
 ## 3. Reproduce the paper numbers

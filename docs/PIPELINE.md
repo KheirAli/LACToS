@@ -17,11 +17,24 @@ Steps 1-2 (see "Shortcut" at the end).
 
 ## Step 0: download the datasets and weights
 
-All assets are zip files with SHA-256 checksums (`SHA256SUMS`); see [DATA.md](DATA.md) for what each
-contains and where it comes from.
+All assets come with SHA-256 checksums; see [DATA.md](DATA.md) for what each contains and where it
+comes from.
 
-| Zip | Contents | Size | Needed for |
-|---|---|---:|---|
+| File | Contents | Size | Needed for | Download |
+|---|---|---:|---|---|
+| `lactos_weights.tar.gz` | `weights/ae`, `weights/backbones`, `weights/torch`: 18 autoencoders + ResNet-101 backbones | 0.6 GB | Step 3 | [Google Drive](https://drive.google.com/file/d/1N6PpLGLLnyDuDG8ecb0trPyS_rbsLM-x/view?usp=drive_link) |
+| `lactos_diffusion.tar` | `weights/diffusion/`: diffusion priors (CT, X-ray, FFHQ) | 0.9 GB | Step 1 | [Google Drive](https://drive.google.com/file/d/10jF91HOyhw6VAEEBWKM7GoLMwdcBisaB/view?usp=drive_link) |
+| `lactos_data.zip` | `data/`: test images + GT masks (15 MVTec categories, CT, X-ray, faces) | 1.6 GB | all steps | coming soon |
+| `lactos_recons_<target>.zip` | released reconstructions, one zip per target | 0.1–1.1 GB | shortcut only | coming soon |
+
+```bash
+bash scripts/download_assets.sh weights diffusion            # downloads from Google Drive, verifies, extracts
+# or download manually from the links above and extract in the repository root:
+tar xzf lactos_weights.tar.gz && tar xf lactos_diffusion.tar
+bash scripts/check_env.sh                                   # checksums, files, python env, unit tests
+```
+
+---|---|---:|---|
 | `lactos_data.zip` | `data/`: test images + GT masks (15 MVTec categories, CT, X-ray, faces) | 1.6 GB | all steps |
 | `lactos_weights.zip` | `weights/ae`, `weights/backbones`, `weights/torch`: 18 autoencoders + ResNet-101 backbones | 0.6 GB | Step 3 |
 | `lactos_diffusion.zip` | `weights/diffusion/`: diffusion priors (CT, X-ray, FFHQ) | 0.8 GB | Step 1 |
