@@ -1,6 +1,6 @@
 # Data, reconstructions and weights
 
-Nothing below is stored in git. `scripts/download_assets.sh` fetches the release tarballs,
+Nothing below is stored in git. `scripts/download_assets.sh` fetches the release zip files,
 checks them against `SHA256SUMS` and unpacks them into the repository root:
 
 ```
@@ -18,20 +18,21 @@ recons/
   results_patches_dps_guided_faces_random/
 ```
 
-## Release tarballs
+## Release zip files
 
 | File | Contents | Size |
 |---|---|---:|
-| `lactos_weights.tar.gz` | `weights/` (18 AEs + 3 backbones) | ~0.6 GB |
-| `lactos_data.tar` | `data/` | 1.6 GB |
-| `lactos_recons_<cat>.tar` (x15) | MVTec reconstructions per category (`_1` suffix; pill `_3`) | 0.12–0.66 GB each, 5.7 GB total |
-| `lactos_recons_CT.tar` | `results_patches_ddad_native_CT_scan` (100 slices x 10 DPS-denoising draws, σ=0.05, ζ′=0.2) | 0.09 GB |
-| `lactos_diffusion.tar` | `weights/diffusion/` — diffusion priors used for DPS sampling (CT, X-ray, FFHQ) | 0.93 GB |
-| `lactos_recons_xray.tar` | `..._xray_scissors_1` (32 patients) + `..._xray_scissors_b2_500k` (40 patients) | 0.13 GB |
-| `lactos_recons_faces.tar` | `..._faces_random_1` (24 faces, 22 with masks) | 0.12 GB |
-| `lactos_recons_faces_moreface.tar` | `results_patches_dps_guided_faces_random` (28 faces) | 1.1 GB |
+| `lactos_data.zip` | `data/`: test images + GT masks (15 MVTec categories, CT, X-ray, faces) | 1.6 GB |
+| `lactos_weights.zip` | `weights/ae`, `weights/backbones`, `weights/torch`: 18 AEs + ResNet-101 backbones | 0.6 GB |
+| `lactos_diffusion.zip` | `weights/diffusion/`: diffusion priors for DPS sampling (CT, X-ray, FFHQ) | 0.8 GB |
+| `lactos_recons_<cat>.zip` (x15) | MVTec reconstructions per category (`_1` suffix; pill `_3`) | 0.12–0.65 GB each, 5.7 GB total |
+| `lactos_recons_CT.zip` | `results_patches_ddad_native_CT_scan` (100 slices x 10 DPS-denoising draws, σ=0.05, ζ′=0.2) | 0.09 GB |
+| `lactos_recons_xray.zip` | `..._xray_scissors_1` (32 patients) + `..._xray_scissors_b2_500k` (40 patients) | 0.12 GB |
+| `lactos_recons_faces.zip` | `..._faces_random_1` (24 faces, 22 with masks) | 0.12 GB |
+| `lactos_recons_faces_moreface.zip` | `results_patches_dps_guided_faces_random` (28 faces) | 1.1 GB |
 
-Every file is < 2 GB (the GitHub Releases per-file limit). Maintainers build them with
+Unzip every file in the repository root (`unzip <file>.zip`); the folders above are created in place.
+Every file is < 2 GB. `SHA256SUMS` lists the checksum of each zip. Maintainers build them with
 `scripts/make_release_assets.sh`.
 
 ## Weight inventory (what produced which number)
@@ -84,5 +85,5 @@ only for new experiments, not as a substitute when regenerating the released MVT
 | Faces (22 + 28 test images, masks) | TODO(maintainers): name the source | TODO: confirm rights to redistribute the images |
 | FFHQ diffusion prior (sampling only, not shipped) | Karras et al.; DPS `ffhq_10m.pt` | per upstream |
 
-If a dataset cannot be redistributed, remove it from `lactos_data.tar` / the recon tarballs
+If a dataset cannot be redistributed, remove it from `lactos_data.zip` / the recon zips
 and document how to obtain it here instead.

@@ -65,12 +65,13 @@ Full metric table (AUROC, SNR, AP, MSE, F1max, AUPRO) and the verification log:
 | Stage | What | Entry point | Needed to reproduce the paper? |
 |---|---|---|---|
 | 0 | Get data, weights and reconstructions | `scripts/download_assets.sh` → [docs/DATA.md](docs/DATA.md) | yes |
-| 1 | Conditional diffusion reconstructions (M per test image) | [`sampling/`](sampling/README.md): `tools/generate_recons.py`, `sampling/dps/` | no (released) |
+| 1 | Conditional diffusion reconstructions (M per test image) | `sampling/sample_mvtec_ddad.sh`, `sampling/sample_ct_dps.sh`, `sampling/sample_patch_dps.sh` ([sampling/README.md](sampling/README.md)) | no (released) |
 | 2 | Train the per-target PixelAutoEncoder | `embedder/train_pixel_ae_interp.py` (seeded), `embedder/train_embedder.py` (original recipe) | no (released) |
-| 3 | Evaluate (superpixel typical-set delta maps) | `scripts/run_reproduce.sh` → `evaluate.py`, `embedder/evaluate_ddad_fe.py` | yes |
+| 3 | Run LACToS on the reconstructions (released or `RECON_ROOT=recons_mine`) | `scripts/run_reproduce.sh` → `evaluate.py`, `embedder/evaluate_ddad_fe.py` | yes |
 | 4 | Metrics + comparison with the paper | `scripts/score_metrics.sh`, `scripts/summarize_results.py` | yes |
 | 5 | Tests | `pytest -m "not requires_ckpt" tests/`, `scripts/check_env.sh` | recommended |
 
+**Step-by-step guide (download → sample → run LACToS → metrics): [docs/PIPELINE.md](docs/PIPELINE.md).**
 Every hyperparameter of every stage: **[docs/HYPERPARAMETERS.md](docs/HYPERPARAMETERS.md)**.
 Verified numbers and determinism notes: **[docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md)**.
 
@@ -86,11 +87,12 @@ conda activate lactos
 ## 2. Download assets (weights, test data, reconstructions)
 
 ```bash
-bash scripts/download_assets.sh                      # everything, ~9 GB
+bash scripts/download_assets.sh                      # everything, ~9.5 GB of zip files
 bash scripts/download_assets.sh weights data toothbrush CT   # or just what you need
 bash scripts/check_env.sh                            # checksums, files, env, unit tests
 ```
 
+Or download the zip files manually and `unzip` them in the repository root.
 What each file is and where it came from: [docs/DATA.md](docs/DATA.md).
 
 ## 3. Reproduce the paper numbers
@@ -127,13 +129,13 @@ evaluate.py                 main evaluation CLI (scorer x config dispatch)
 super_pixel_generation.py   superpixel mask generation (cached under figures*/, regenerated on demand)
 ood/                        core package: data loading, superpixels, embeddings, typical-set scoring, metrics, samplers
 embedder/                   evaluate_ddad_fe.py (backbone-weight injection), train_pixel_ae_interp.py / train_embedder.py (AE training)
-sampling/                   reconstruction generation: DPS sampler (sampling/dps/), output wiring scripts, README
+sampling/                   Step 1: sample_mvtec_ddad.sh, sample_ct_dps.sh, sample_patch_dps.sh, DPS code (sampling/dps/), README
 tools/                      seeded_run.py, generate_recons.py (DDAD-guided sampler driver), prepare_xray_dataset.py, metrics/
 configs/                    evaluation YAMLs; configs/recon/ = sampler YAMLs for tools/generate_recons.py
 scripts/                    run_reproduce.sh, score_metrics.sh, summarize_results.py, check_env.sh, download/make assets
 DDAD/                       DDAD implementation (Mousakhan et al.): UNet training + DDAD-guided sampling backend (MVTec)
 tests/                      pytest suite (`pytest -m "not requires_ckpt"` needs no checkpoints)
-docs/                       HYPERPARAMETERS.md, DATA.md, REPRODUCIBILITY.md
+docs/                       PIPELINE.md (step by step), HYPERPARAMETERS.md, DATA.md, REPRODUCIBILITY.md
 reference_results/          JSON outputs of the verified run (compare with your own)
 ```
 

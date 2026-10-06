@@ -1,0 +1,24 @@
+# Patch (superpixel) inpainting task used for the X-ray and faces reconstructions.
+# sampling/sample_patch_dps.sh copies this file and substitutes `sigma` per run.
+# NOTE: the DPS guidance scale used for the released X-ray / faces sets was not recorded;
+# 0.5 is the upstream DPS inpainting default.
+conditioning:
+  method: ps
+  params:
+    scale: 0.5
+
+data:
+  name: ffhq
+  root: ./data/samples/        # overridden by --data_root
+
+measurement:
+  operator:
+    name: inpainting
+  mask_opt:
+    mask_type: refined_box      # superpixel mask from super_pixel_generation.py, selected by --box_coords
+    mask_len_range: !!python/tuple [128, 129]
+    image_size: 256
+
+  noise:
+    name: gaussian
+    sigma: 0.5

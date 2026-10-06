@@ -6,7 +6,7 @@ deterministic up to floating-point summation order on the GPU.
 
 ## Verified run (2026-10-05)
 
-* Code: this repository. Assets: the release tarballs (`weights.sha256` for the weights).
+* Code: this repository. Assets: the release zip files (`weights.sha256` for the weights).
 * Environment of this verification: Python 3.9.25, torch 2.8.0+cu128, torchvision 0.23.0, numpy 1.23.5,
   scipy 1.9.3, scikit-image 0.22.0, scikit-learn 1.6.1, NVIDIA RTX A6000.
 * The original paper runs used the environment in `environment.yml` (Python 3.10.20, torch 2.11.0+cu130,
@@ -79,7 +79,10 @@ made with the DDAD-guided sampler (40 draws) gives 0.9378 and is not part of the
 
 ## What is *not* reproducible from this repository alone
 
-* **Reconstructions.** They are released as data. Regenerating them needs the diffusion checkpoints
+* **Reconstructions.** They are released as data. Re-running a sampler with the recorded seeds gives
+  statistically equivalent but not bit-identical draws: regenerating CT image_0011 with the DDAD sampler
+  and seeds 0-1 differs from the original draw by 1.0 grey level on average (correlation 0.9985), versus
+  2.3 between two different seeds, because GPU kernels and library versions changed. Regenerating them needs the diffusion checkpoints
   (not released) and, for faces and X-ray, an external DPS patch-inpainting codebase. Sampler settings
   are recorded in docs/HYPERPARAMETERS.md §5. Some are marked UNKNOWN because no metadata was saved.
 * **AE training.** `embedder/train_pixel_ae_interp.py` (seeded) and `embedder/train_embedder.py`

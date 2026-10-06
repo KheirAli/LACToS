@@ -4,6 +4,8 @@
 #
 #   GPU=0 bash scripts/run_reproduce.sh                      # all targets (~3-6 h on one A6000)
 #   GPU=0 bash scripts/run_reproduce.sh toothbrush CT faces  # any subset
+#   RECON_ROOT=/path/to/my_recons GPU=0 bash scripts/run_reproduce.sh cable   # evaluate your own Step-1 samples
+#   CT_SUB=mine GPU=0 bash scripts/run_reproduce.sh CT                       # CT from recons/..._CT_mine
 #
 # Targets: bottle cable capsule carpet grid hazelnut leather metal_nut pill screw tile
 #          toothbrush transistor wood zipper CT xray xray_b2 faces faces_moreface
@@ -23,7 +25,9 @@ export ABL_SEED="${ABL_SEED:-0}"                               # tools/seeded_ru
 GPU="${GPU:-0}"; OUT="${OUT:-$ROOT/results_eval_reproduction}"; mkdir -p "$OUT/json" "$OUT/maps" "$OUT/logs"
 
 W=weights; AE=$W/ae; BB=$W/backbones
-RECON=./recons/results_patches_ddad_native        # prefix: dir = ${RECON}_<category>_<subcategory><suffix>
+RECON_ROOT="${RECON_ROOT:-./recons}"               # point at your own sampled reconstructions (Step 1 output)
+RECON="$RECON_ROOT/results_patches_ddad_native"   # prefix: dir = ${RECON}_<category>_<subcategory><suffix>
+CT_SUB="${CT_SUB:-scan}"                          # CT recon dir = ${RECON}_CT_${CT_SUB}
 DATA="$ROOT/data/mvtec_ad"
 SEEDED="python tools/seeded_run.py"
 IMAGENET_V1="$BB/resnet101_imagenet1k_v1.pth"     # == torchvision ResNet101_Weights.IMAGENET1K_V1 (resnet101-63fe2227.pth)
@@ -45,7 +49,7 @@ run_pill() {                   # pill: plain evaluate.py (torchvision IMAGENET1K
 run_CT() {                     # CT (100 slices): IMAGENET1K_V2 backbone, CT AE, 64/64 bins, 10 DPS-denoising draws (sigma=0.05, zeta'=0.2)
   DUMP_DELTA_DIR="$OUT/maps/CT/ct100" CUDA_VISIBLE_DEVICES="$GPU" \
   $SEEDED evaluate.py --config configs/experiment_ddad_native_xray.yaml \
-    --category CT --subcategory scan --results_root "$RECON" --gt_root "$DATA/CT/ground_truth" \
+    --category CT --subcategory "$CT_SUB" --results_root "$RECON" --gt_root "$DATA/CT/ground_truth" \
     --autoencoder_path "$AE/CT.pth" --n_pca 3 --bins_pca 64 --bins_rgb 64 --sigma_rohan 1.0 \
     --superpixel_target_size 30 --smooth_sigma 1 --no_plots --skip_sampling --max_reconstructions 40 --output_dir "$OUT/json/CT/ct100"; }
 run_xray() { local tag="$1" suffix="$2"   # xray/scissors: DDAD last-layer fine-tuned backbone + xray AE. b1 = 32 patients (_1), b2 = 40 patients (_b2_500k)
@@ -61,7 +65,7 @@ run_faces() {                  # faces random22: IMAGENET1K_V2 backbone, faces A
 run_faces_moreface() {         # faces moreface28 (the other 28 faces of the full-50 set)
   DUMP_DELTA_DIR="$OUT/maps/faces/moreface28" CUDA_VISIBLE_DEVICES="$GPU" \
   $SEEDED evaluate.py --config configs/experiment_dps_faces_moreface.yaml \
-    --category faces --all_subcategories --results_root ./recons/results_patches_dps_guided \
+    --category faces --all_subcategories --results_root "$RECON_ROOT/results_patches_dps_guided" \
     --gt_root "$ROOT/data/faces_moreface28/ground_truth" \
     --autoencoder_path "$AE/faces.pth" $COMMON --sigma_rohan 1.0 --output_dir "$OUT/json/faces/moreface28"; }
 

@@ -2,6 +2,9 @@
 /weights
 /data
 /recons
+/recons_mine/
+/sampling/dps/outputs/
+/sampling/dps/logs/
 /.assets_cache/
 # runtime outputs / caches (superpixel masks are regenerated deterministically)
 /results_eval_*/
