@@ -90,12 +90,13 @@ conda activate lactos
 |---|---|---:|---|
 | `lactos_weights.tar.gz` | 18 autoencoders + ResNet-101 backbones (needed to run LACToS) | 0.6 GB | [Google Drive](https://drive.google.com/file/d/1N6PpLGLLnyDuDG8ecb0trPyS_rbsLM-x/view?usp=drive_link) |
 | `lactos_diffusion.tar` | diffusion priors for CT, X-ray, FFHQ (only needed to re-sample) | 0.9 GB | [Google Drive](https://drive.google.com/file/d/10jF91HOyhw6VAEEBWKM7GoLMwdcBisaB/view?usp=drive_link) |
-| `lactos_data.zip`, `lactos_recons_<target>.zip` | test images + GT masks; released reconstructions | 1.6 GB; 7 GB | coming soon |
+| `lactos_data.zip` | test images + GT masks (15 MVTec categories, CT, X-ray, faces) | 1.6 GB | [Google Drive](https://drive.google.com/file/d/1YS7Z4Sd6dTJSaipUpTjY4X4SSqj38Snv/view?usp=sharing) |
+| `lactos_recons_<target>.zip` | released reconstructions | 7 GB | coming soon |
 
 ```bash
-bash scripts/download_assets.sh weights diffusion    # downloads from Google Drive, checks SHA-256, extracts here
+bash scripts/download_assets.sh weights data diffusion    # downloads from Google Drive, checks SHA-256, extracts here
 # or download manually and extract in the repository root:
-tar xzf lactos_weights.tar.gz && tar xf lactos_diffusion.tar
+tar xzf lactos_weights.tar.gz && tar xf lactos_diffusion.tar && unzip lactos_data.zip
 bash scripts/check_env.sh                            # checksums, files, env, unit tests
 ```
 

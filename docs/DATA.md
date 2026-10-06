@@ -24,7 +24,7 @@ recons/
 |---|---|---:|---|
 | `lactos_weights.tar.gz` | `weights/ae`, `weights/backbones`, `weights/torch`: 18 autoencoders + ResNet-101 backbones | 0.6 GB | [Google Drive](https://drive.google.com/file/d/1N6PpLGLLnyDuDG8ecb0trPyS_rbsLM-x/view?usp=drive_link) |
 | `lactos_diffusion.tar` | `weights/diffusion/`: diffusion priors for DPS sampling (CT, X-ray, FFHQ) | 0.9 GB | [Google Drive](https://drive.google.com/file/d/10jF91HOyhw6VAEEBWKM7GoLMwdcBisaB/view?usp=drive_link) |
-| `lactos_data.zip` | `data/`: test images + GT masks (15 MVTec categories, CT, X-ray, faces) | 1.6 GB | coming soon |
+| `lactos_data.zip` | `data/`: test images + GT masks (15 MVTec categories, CT, X-ray, faces) | 1.6 GB | [Google Drive](https://drive.google.com/file/d/1YS7Z4Sd6dTJSaipUpTjY4X4SSqj38Snv/view?usp=sharing) |
 | `lactos_recons_<cat>.zip` (x15) | MVTec reconstructions per category (`_1` suffix; pill `_3`) | 0.12–0.65 GB each, 5.7 GB total | coming soon |
 | `lactos_recons_CT.zip` | `results_patches_ddad_native_CT_scan` (100 slices x 10 DPS-denoising draws, σ=0.05, ζ′=0.2) | 0.09 GB | coming soon |
 | `lactos_recons_xray.zip` | `..._xray_scissors_1` (32 patients) + `..._xray_scissors_b2_500k` (40 patients) | 0.12 GB | coming soon |

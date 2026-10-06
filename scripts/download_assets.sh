@@ -15,9 +15,10 @@ DL="${DL:-$ROOT/.assets_cache}"; mkdir -p "$DL"
 # Google Drive files: group -> "<file id> <file name> <sha256>"
 declare -A GDRIVE=(
   [weights]="1N6PpLGLLnyDuDG8ecb0trPyS_rbsLM-x lactos_weights.tar.gz 54c0e293f625b9e3ff1dd1ecc9606210b44a65b79dcf9d1a9e8230cf2e7f090d"
+  [data]="1YS7Z4Sd6dTJSaipUpTjY4X4SSqj38Snv lactos_data.zip 7888c2a09bba27bb551cf520572cbc9a012331ddf8945daf050f180161eaeec8"
   [diffusion]="10jF91HOyhw6VAEEBWKM7GoLMwdcBisaB lactos_diffusion.tar 25d8b0e9aae115081497812a18c049bd4ada93b9984cf2e8251a3bee1e55c2ce"
 )
-# Not uploaded yet: data and reconstructions (lactos_data.zip, lactos_recons_<target>.zip). Set BASE_URL to a
+# Not uploaded yet: reconstructions (lactos_recons_<target>.zip). Set BASE_URL to a
 # folder that serves them together with SHA256SUMS, or add their Google Drive ids to GDRIVE above.
 BASE_URL="${BASE_URL:-}"
 
