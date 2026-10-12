@@ -86,6 +86,5 @@ made with the DDAD-guided sampler (40 draws) gives 0.9378 and is not part of the
   (not released) and, for faces and X-ray, an external DPS patch-inpainting codebase. Sampler settings
   are recorded in docs/HYPERPARAMETERS.md §5. Some are marked UNKNOWN because no metadata was saved.
 * **AE training.** `embedder/train_pixel_ae_interp.py` (seeded) and `embedder/train_embedder.py`
-  (original recipe) are included. The exact recipe and training data of several released AEs were not
-  recorded (docs/HYPERPARAMETERS.md §4.2). The released checkpoints are the ones behind every number
+  (original recipe) are included. The released checkpoints are the ones behind every number
   above.
