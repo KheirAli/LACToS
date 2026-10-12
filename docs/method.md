@@ -29,8 +29,8 @@ The original README reports Gaussian smoothing with \(\sigma=5\) for the anomaly
 | Domain | Reconstruction method | Notes |
 |---|---|---|
 | MVTec AD | DDAD-guided denoising | Different UNet per category; the referenced per-category checkpoints are not yet released |
-| CT | DPS | CT diffusion prior available in the diffusion-weight archive |
-| X-ray and faces | DPS patch inpainting | Diffusion priors available in the diffusion-weight archive |
+| CT | DPS denoising| CT diffusion prior available in the diffusion-weight archive |
+| X-ray and faces | DPS denoising | Diffusion priors available in the diffusion-weight archive |
 
 Precomputed reconstructions can be used without rerunning diffusion sampling. See [Sampling](../sampling/README.md) for scripts and reconstruction formats, and [Data and assets](DATA.md) for checkpoint availability.
 
