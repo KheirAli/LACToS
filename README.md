@@ -73,8 +73,8 @@ Manual download, expected file locations, checksums, and dataset licenses are de
 |---|---|---|
 | Industrial anomaly localization | MVTec AD, 15 categories | DDAD-guided diffusion |
 | Medical imaging | CT anomaly images | Diffusion posterior sampling (DPS) |
-| Security imaging | DvXray baggage images | DPS inpainting |
-| Face-image anomalies | Masked face images | DPS inpainting |
+| Security imaging | DvXray baggage images | DPS |
+| Face-image anomalies | Masked face images | DPS |
 
 LACToS takes a set of plausible reconstructions and outputs localized anomaly scores. To process a **new dataset**, first prepare reconstructions and the necessary feature-model assets, then follow the dataset setup and scoring instructions in [Pipeline guide](docs/PIPELINE.md) and [Sampling](sampling/README.md). The repository does not currently document a verified, one-command inference interface for arbitrary user images.
 
