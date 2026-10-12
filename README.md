@@ -113,6 +113,6 @@ Citation metadata is maintained in [`CITATION.cff`](CITATION.cff). Please use th
 
 ## Acknowledgments and licensing
 
-This work builds on [DDAD](DDAD/) (Mousakhan et al.), Diffusion Posterior Sampling (Chung et al., ICLR 2023), and MVTec AD (Bergmann et al.). Respect their original licenses and attribution requirements.
+This work used [DDAD](DDAD/) (Mousakhan et al.) models for Mvtec AD dataset reconstruction, Diffusion Posterior Sampling (Chung et al., ICLR 2023), and MVTec AD (Bergmann et al.). Respect their original licenses and attribution requirements.
 
 **Release note:** The supplied repository documentation does not yet identify a finalized top-level software license. Confirm the license and third-party redistribution permissions before publishing the repository or model archives.
