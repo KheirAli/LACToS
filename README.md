@@ -1,159 +1,118 @@
-# LACToS — local anomaly detection from diffusion reconstructions
+# LACToS: Local Anomaly Detection from Diffusion Reconstructions
 
-LACToS is a method for OOD detection in inverse problems.
+**LACToS** localizes out-of-distribution (OOD) content in images using multiple diffusion reconstructions of the observed image. It produces a pixel-level anomaly map from a clean-data diffusion prior, without requiring training examples of every possible anomaly.
 
-<!-- TODO(maintainers): paper title, authors, venue, arXiv link, teaser figure -->
+The repository includes experiments on **MVTec AD (15 categories), CT, baggage X-ray, and face images**. For the method and mathematical details, see [Method](docs/METHOD.md); for the sampling backends, see [Sampling](sampling/README.md).
 
-Pixel-level anomaly / OOD localization. For each test image we draw several diffusion
-reconstructions, embed image and reconstructions with ResNet-101 pixel features (1792-d),
-compress them with a small per-target **PixelAutoEncoder (1792 → 3)**, and score every
-superpixel (`ood/superpixels.py`) by how far its RGB and latent histograms fall outside the
-*typical set* of the reconstructions (average NLL minus entropy). The superpixel scores
-form a delta map, which is smoothed and compared against the ground-truth masks.
+## Quick start
 
-```
-test image ──► M conditional diffusion reconstructions (shipped)
-           ──► ResNet-101 pixel features ──► PixelAutoEncoder (1792→3)
-           ──► superpixels ──► typical-set score  Δ = (NLL_rgb − H_rgb) + (NLL_lat − H_lat)
-           ──► Gaussian smoothing (σ=5) ──► pixel AUROC / AP / F1max / AUPRO / SNR
-```
-
-**How the RGB and latent terms are combined.** For each superpixel, the RGB values and the
-autoencoder latents of the reconstructions each get their own histogram, and the score is the sum
-of the two typical-set deviations:
-
-    Δ = (NLL_rgb − H_rgb) + (NLL_lat − H_lat)
-
-This sum is exactly the joint typical-set score under a factorized model p(rgb, z) = p(rgb) · p(z)
-(joint entropy = H_rgb + H_lat, joint NLL = NLL_rgb + NLL_lat). We use the addition for
-computational reasons: a full joint histogram over (R, G, B, z₁, z₂, z₃) would have 32⁶ ≈ 10⁹ bins
-per superpixel, while each superpixel only provides ~25 pixels × M reconstructions (~10³ samples),
-so it could neither be stored nor estimated reliably.
-
-**One algorithm for every dataset.** LACToS has a single pipeline: (1) draw M diffusion
-reconstructions conditioned on the test image, (2) embed and compress them, (3) score superpixels with
-the typical-set deviation above. Steps 2–3 are identical for all datasets. Step 1 only needs *some*
-conditional diffusion sampler that returns M plausible in-distribution versions of the test image; the
-released reconstruction sets were produced with:
-
-| Data | Conditional sampler | Draws per image |
-|---|---|---:|
-| MVTec AD (15 categories) | DDAD-guided denoising (w = 2, t* = 250, DDAD UNet per category) | 40 (pill 32) |
-| CT | DPS denoising, y = x + σn with σ = 0.05, ζ′ = 0.2 (CT diffusion prior) | 10 |
-| X-ray (DvXray), faces | DPS patch inpainting (Chung et al., 2023) | 16–48 |
-
-Sampler details and how to regenerate or add reconstructions: [sampling/README.md](sampling/README.md).
-Diffusion models: the CT, X-ray and FFHQ priors are released (`weights/diffusion/`); the per-category
-MVTec DDAD UNets are **not yet released** (epochs listed in [docs/DATA.md](docs/DATA.md)). None of them
-are needed to reproduce the numbers, because the reconstructions themselves are released.
-
-Evaluated on all 15 MVTec-AD categories, a CT anomaly set (100 slices), baggage
-X-ray (DvXray, scissors class, 72 patients) and masked faces (50 images).
-
-## Results (pixel ROC-AUC, eval σ = 5)
-
-| bottle | cable | capsule | carpet | grid | hazelnut | leather | metal_nut | pill | screw | tile | toothbrush | transistor | wood | zipper | **MVTec mean** |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| .9771 | .9569 | .9553 | .9259 | .9126 | .9688 | .9842 | .9580 | .9193 | .9231 | .9007 | .9477 | .9432 | .8912 | .9666 | **.9420** |
-
-CT .9463 · X-ray (b1, 32 patients) .9528 (reproduces as .9526) · faces (random22) .9105.
-Full metric table (AUROC, SNR, AP, MSE, F1max, AUPRO) and the verification log:
-[docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md).
-
-## Workflow at a glance
-
-| Stage | What | Entry point | Needed to reproduce the paper? |
-|---|---|---|---|
-| 0 | Get data, weights and reconstructions | `scripts/download_assets.sh` → [docs/DATA.md](docs/DATA.md) | yes |
-| 1 | Conditional diffusion reconstructions (M per test image) | `sampling/sample_mvtec_ddad.sh`, `sampling/sample_ct_dps.sh`, `sampling/sample_patch_dps.sh` ([sampling/README.md](sampling/README.md)) | no (released) |
-| 2 | Train the per-target PixelAutoEncoder | `embedder/train_pixel_ae_interp.py` (seeded), `embedder/train_embedder.py` (original recipe) | no (released) |
-| 3 | Run LACToS on the reconstructions (released or `RECON_ROOT=recons_mine`) | `scripts/run_reproduce.sh` → `evaluate.py`, `embedder/evaluate_ddad_fe.py` | yes |
-| 4 | Metrics + comparison with the paper | `scripts/score_metrics.sh`, `scripts/summarize_results.py` | yes |
-| 5 | Tests | `pytest -m "not requires_ckpt" tests/`, `scripts/check_env.sh` | recommended |
-
-**Step-by-step guide (download → sample → run LACToS → metrics): [docs/PIPELINE.md](docs/PIPELINE.md).**
-Every hyperparameter of every stage: **[docs/HYPERPARAMETERS.md](docs/HYPERPARAMETERS.md)**.
-Verified numbers and determinism notes: **[docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md)**.
-
-## 1. Install
+**Requirements:** Conda, a compatible NVIDIA GPU, and a working CUDA installation. The reference environment is specified in [`environment.yml`](environment.yml).
 
 ```bash
-git clone https://github.com/KheirAli/LACToS.git && cd LACToS
-conda env create -f environment.yml          # exact reference env: python 3.10.20, torch 2.11.0 (cu130)
+# 1. Clone and install
+git clone https://github.com/KheirAli/LACToS.git
+cd LACToS
+conda env create -f environment.yml
 conda activate lactos
-# or: pip install -r requirements.txt  (install the torch build matching your CUDA first)
+
+# 2. Download the pretrained feature models and benchmark data
+bash scripts/download_assets.sh weights data
+
+# 3. Check the environment and downloaded files
+bash scripts/check_env.sh
+
+# 4. Run one benchmark (once its diffusion reconstructions are available)
+GPU=0 bash scripts/run_reproduce.sh toothbrush
 ```
 
-## 2. Download assets (weights, test data, reconstructions)
+Results are written under `results_eval_reproduction/` (including anomaly maps, logs, and result files).
 
-| File | Contents | Size | Download |
-|---|---|---:|---|
-| `lactos_weights.tar.gz` | 18 autoencoders + ResNet-101 backbones (needed to run LACToS) | 0.6 GB | [Google Drive](https://drive.google.com/file/d/1N6PpLGLLnyDuDG8ecb0trPyS_rbsLM-x/view?usp=drive_link) |
-| `lactos_diffusion.tar` | diffusion priors for CT, X-ray, FFHQ (only needed to re-sample) | 0.9 GB | [Google Drive](https://drive.google.com/file/d/10jF91HOyhw6VAEEBWKM7GoLMwdcBisaB/view?usp=drive_link) |
-| `lactos_data.zip` | test images + GT masks (15 MVTec categories, CT, X-ray, faces) | 1.6 GB | [Google Drive](https://drive.google.com/file/d/1YS7Z4Sd6dTJSaipUpTjY4X4SSqj38Snv/view?usp=sharing) |
-| `lactos_recons_<target>.zip` | released reconstructions | 7 GB | coming soon |
+**Important — reconstruction availability:** LACToS evaluation also requires precomputed diffusion reconstructions. The reconstruction archives are marked *coming soon* in the supplied release information, so the final command cannot be run from the currently listed public downloads alone. Once published, place them in the layout described in [Data and assets](docs/DATA.md). Alternatively, generate reconstructions using [Sampling](sampling/README.md); some sampling weights, including the MVTec DDAD UNets, are not yet publicly released.
+
+## Run LACToS
+
+After installing the environment and downloading the assets and reconstructions required for your selected target:
 
 ```bash
-bash scripts/download_assets.sh weights data diffusion    # downloads from Google Drive, checks SHA-256, extracts here
-# or download manually and extract in the repository root:
-tar xzf lactos_weights.tar.gz && tar xf lactos_diffusion.tar && unzip lactos_data.zip
-bash scripts/check_env.sh                            # checksums, files, env, unit tests
+# Run a single category
+GPU=0 bash scripts/run_reproduce.sh bottle
+
+# Run a subset
+GPU=0 bash scripts/run_reproduce.sh toothbrush CT
+
+# Run all configured targets
+GPU=0 bash scripts/run_reproduce.sh
+
+# Compute metrics from the generated anomaly maps
+bash scripts/score_metrics.sh
+python scripts/summarize_results.py
 ```
 
-What each file is and where it came from: [docs/DATA.md](docs/DATA.md).
+For the complete sequence of inputs, outputs, and options, see [Pipeline guide](docs/PIPELINE.md). Configuration choices and hyperparameters are in [Hyperparameters](docs/HYPERPARAMETERS.md); reported results and reproduction checks are in [Reproducibility](docs/REPRODUCIBILITY.md).
 
-## 3. Reproduce the paper numbers
+## Download models and data
 
-Evaluation only: it reads the shipped reconstructions and checkpoints and is deterministic
-(seeded through `tools/seeded_run.py`, `ABL_SEED=0`).
+| Asset | Purpose | Download |
+|---|---|---|
+| Feature models (`lactos_weights.tar.gz`) | ResNet-101 and pretrained pixel autoencoders used by LACToS | [Google Drive](https://drive.google.com/file/d/1N6PpLGLLnyDuDG8ecb0trPyS_rbsLM-x/view?usp=drive_link) |
+| Benchmark data (`lactos_data.zip`) | Test images and ground-truth masks | [Google Drive](https://drive.google.com/file/d/1YS7Z4Sd6dTJSaipUpTjY4X4SSqj38Snv/view?usp=sharing) |
+| Diffusion priors (`lactos_diffusion.tar`) | CT, X-ray, and face reconstruction generation; **not needed** when reconstructions are already available | [Google Drive](https://drive.google.com/file/d/10jF91HOyhw6VAEEBWKM7GoLMwdcBisaB/view?usp=drive_link) |
+| Precomputed reconstructions (`lactos_recons_<target>.zip`) | Input reconstruction sets for the scoring pipeline | **Not yet released** |
+
+To download only the assets needed for LACToS scoring, use `bash scripts/download_assets.sh weights data`. To obtain the available diffusion priors as well, run:
 
 ```bash
-GPU=0 bash scripts/run_reproduce.sh                  # all 20 targets, ~3-6 h on one RTX A6000 (~15 GB VRAM)
-GPU=0 bash scripts/run_reproduce.sh toothbrush CT    # any subset
-bash scripts/score_metrics.sh                        # full metric table from the delta-map dumps (CPU)
-python scripts/summarize_results.py                  # reproduced vs. reference numbers
+bash scripts/download_assets.sh diffusion
 ```
 
-Targets: `bottle cable capsule carpet grid hazelnut leather metal_nut pill screw tile toothbrush
-transistor wood zipper CT xray xray_b2 faces faces_moreface`. Run several in parallel with different
-`GPU=` values; outputs (`results_eval_reproduction/{json,maps,logs,metrics}`) do not collide.
+Manual download, expected file locations, checksums, and dataset licenses are described in [Data and assets](docs/DATA.md). Do not assume third-party datasets or weights may be redistributed beyond their license terms.
 
-Every flag, default and per-target setting is documented in
-**[docs/HYPERPARAMETERS.md](docs/HYPERPARAMETERS.md)**.
+## Supported applications
 
-## 4. Use it on your own data
+| Application | Datasets / inputs | Reconstruction approach |
+|---|---|---|
+| Industrial anomaly localization | MVTec AD, 15 categories | DDAD-guided diffusion |
+| Medical imaging | CT anomaly images | Diffusion posterior sampling (DPS) |
+| Security imaging | DvXray baggage images | DPS inpainting |
+| Face-image anomalies | Masked face images | DPS inpainting |
 
-* **Score your own heat maps with our metrics.** `python tools/metrics/full_metric_table.py --maps_dir DIR --out OUT.json`
-  reads `.npz` files with `delta_map` (float32 H×W), `gt_mask` (uint8), `valid_mask` (uint8).
-* **New category.** Produce reconstructions in the `recons/` layout (`tools/generate_recons.py`,
-  needs a DDAD UNet), train an AE with `embedder/train_pixel_ae_interp.py --latent_dim 3 --num_epochs 30
-  --seed 0 --n_restarts 3`, then run `evaluate.py` with the MVTec flags from `scripts/run_reproduce.sh`.
+LACToS takes a set of plausible reconstructions and outputs localized anomaly scores. To process a **new dataset**, first prepare reconstructions and the necessary feature-model assets, then follow the dataset setup and scoring instructions in [Pipeline guide](docs/PIPELINE.md) and [Sampling](sampling/README.md). The repository does not currently document a verified, one-command inference interface for arbitrary user images.
 
-## Repository layout
+## Documentation
 
+- [Method](docs/METHOD.md) — algorithm, mathematical formulation, and implementation pointers
+- [Pipeline](docs/PIPELINE.md) — setup, reconstruction inputs, execution, and output formats
+- [Sampling](sampling/README.md) — generating diffusion reconstructions
+- [Data and assets](docs/DATA.md) — downloads, directory layout, and model availability
+- [Hyperparameters](docs/HYPERPARAMETERS.md) — configurations and per-dataset settings
+- [Reproducibility](docs/REPRODUCIBILITY.md) — metrics, results, and verification notes
+
+## Repository structure
+
+```text
+ood/                Core anomaly-scoring and data-processing code
+embedder/           Pixel-autoencoder training and feature evaluation
+sampling/           Conditional diffusion reconstruction methods
+configs/            Evaluation and reconstruction configurations
+scripts/            Download, execution, and reporting scripts
+tools/              Dataset preparation and supporting utilities
+docs/               Method, usage, asset, and reproducibility guides
+tests/              Automated tests
+reference_results/  Reference outputs for comparison
 ```
-evaluate.py                 main evaluation CLI (scorer x config dispatch)
-super_pixel_generation.py   superpixel mask generation (cached under figures*/, regenerated on demand)
-ood/                        core package: data loading, superpixels, embeddings, typical-set scoring, metrics, samplers
-embedder/                   evaluate_ddad_fe.py (backbone-weight injection), train_pixel_ae_interp.py / train_embedder.py (AE training)
-sampling/                   Step 1: sample_mvtec_ddad.sh, sample_ct_dps.sh, sample_patch_dps.sh, DPS code (sampling/dps/), README
-tools/                      seeded_run.py, generate_recons.py (DDAD-guided sampler driver), prepare_xray_dataset.py, metrics/
-configs/                    evaluation YAMLs; configs/recon/ = sampler YAMLs for tools/generate_recons.py
-scripts/                    run_reproduce.sh, score_metrics.sh, summarize_results.py, check_env.sh, download/make assets
-DDAD/                       DDAD implementation (Mousakhan et al.): UNet training + DDAD-guided sampling backend (MVTec)
-tests/                      pytest suite (`pytest -m "not requires_ckpt"` needs no checkpoints)
-docs/                       PIPELINE.md (step by step), HYPERPARAMETERS.md, DATA.md, REPRODUCIBILITY.md
-reference_results/          JSON outputs of the verified run (compare with your own)
+
+For a basic test that does not require model checkpoints:
+
+```bash
+pytest -m "not requires_ckpt" tests/
 ```
 
 ## Citation
 
-See [CITATION.cff](CITATION.cff). <!-- TODO(maintainers): BibTeX -->
+Citation metadata is maintained in [`CITATION.cff`](CITATION.cff). Please use the publication details listed there when citing this work.
 
-## Acknowledgements and licences
+## Acknowledgments and licensing
 
-* **DDAD** — Mousakhan et al., *Anomaly Detection with Conditioned Denoising Diffusion Models*, 2023 (`DDAD/`, reconstruction sampler).
-* **DPS** — Chung et al., *Diffusion Posterior Sampling*, ICLR 2023 (CT, X-ray and face reconstructions).
-* **MVTec AD** — Bergmann et al.; data under CC BY-NC-SA 4.0.
+This work builds on [DDAD](DDAD/) (Mousakhan et al.), Diffusion Posterior Sampling (Chung et al., ICLR 2023), and MVTec AD (Bergmann et al.). Respect their original licenses and attribution requirements.
 
-Code licence: **not yet chosen** — a LICENSE file will be added before the public release. <!-- TODO(maintainers): choose licence; check DDAD upstream licence for DDAD/ -->
+**Release note:** The supplied repository documentation does not yet identify a finalized top-level software license. Confirm the license and third-party redistribution permissions before publishing the repository or model archives.
