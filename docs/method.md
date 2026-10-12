@@ -15,9 +15,7 @@ LACToS performs pixel-level anomaly localization using a collection of condition
 
 For each superpixel, LACToS computes typical-set deviations for RGB and learned latent features. The two contributions are added:
 
-$
-\Delta = (\mathrm{NLL}_{\mathrm{RGB}} - H_{\mathrm{RGB}})
-       + (\mathrm{NLL}_{\mathrm{latent}} - H_{\mathrm{latent}}).$
+$\Delta = (\mathrm{NLL}_{\mathrm{RGB}} - H_{\mathrm{RGB}})+ (\mathrm{NLL}_{\mathrm{latent}} - H_{\mathrm{latent}}).$
 
 Here NLL denotes negative log-likelihood under reconstruction-derived histograms, and \(H\) denotes the corresponding entropy. The expression can be interpreted as a joint typical-set deviation **under a factorized RGB/latent model**; it is not an estimate of a full six-dimensional joint histogram. The original implementation uses separate histograms because a joint histogram at 32 bins per dimension would require \(32^6\) bins per superpixel, far more than the available samples support.
 
